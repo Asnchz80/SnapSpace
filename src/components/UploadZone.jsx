@@ -43,7 +43,7 @@ export default function UploadZone({ onImageSelected }) {
           borderColor: isDragging ? 'rgba(124,58,237,0.55)' : 'rgba(255,255,255,0.1)',
           backgroundColor: isDragging ? 'rgba(124,58,237,0.05)' : 'transparent',
         }}
-        className="group relative border-2 border-dashed rounded-2xl p-14 cursor-pointer flex flex-col items-center gap-5"
+        className="group relative border-2 border-dashed rounded-2xl p-8 sm:p-14 cursor-pointer flex flex-col items-center gap-5"
         style={{ borderColor: 'rgba(255,255,255,0.1)' }}
       >
         <AnimatePresence mode="wait">

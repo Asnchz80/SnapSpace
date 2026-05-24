@@ -76,18 +76,18 @@ export default function AreaSelector({ imageFile, onSubmit, onCancel }) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col gap-6"
+      className="flex flex-col gap-5"
     >
       <div className="text-center">
-        <h3 className="text-lg font-700 text-white">Select the area to redesign</h3>
-        <p className="text-sm text-gray-400 mt-1">
+        <h3 className="text-lg font-semibold text-white">Select the area to redesign</h3>
+        <p className="text-sm text-[#8888A4] mt-1">
           Paint over the area you want changed. The rest stays the same.
         </p>
       </div>
 
       {/* Canvas layer */}
       <div
-        className="relative mx-auto rounded-2xl overflow-hidden ring-1 ring-white/10 cursor-crosshair"
+        className="relative mx-auto rounded-xl overflow-hidden border border-white/[0.08] cursor-crosshair"
         style={{ width: '100%', maxWidth: imgDims.w || 800 }}
       >
         {/* Original image */}
@@ -115,18 +115,20 @@ export default function AreaSelector({ imageFile, onSubmit, onCancel }) {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 glass rounded-xl p-4">
-        {/* Tool toggle */}
+      <div className="card rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+        {/* Tool toggle + clear */}
         <div className="flex items-center gap-2">
           {[
-            { id: 'brush', icon: <Brush size={15} />, label: 'Paint' },
-            { id: 'eraser', icon: <Eraser size={15} />, label: 'Erase' },
+            { id: 'brush', icon: <Brush size={14} />, label: 'Paint' },
+            { id: 'eraser', icon: <Eraser size={14} />, label: 'Erase' },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setTool(t.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-500 transition-all duration-200 ${
-                tool === t.id ? 'btn-brand text-white shadow-lg shadow-violet-500/25' : 'text-gray-400 hover:text-white hover:bg-white/5'
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                tool === t.id
+                  ? 'btn-brand text-white'
+                  : 'text-[#8888A4] hover:text-white hover:bg-white/[0.05]'
               }`}
             >
               {t.icon}
@@ -135,55 +137,54 @@ export default function AreaSelector({ imageFile, onSubmit, onCancel }) {
           ))}
           <button
             onClick={clearCanvas}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-500 text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-[#8888A4] hover:text-white hover:bg-white/[0.05] transition-colors"
           >
-            <RotateCcw size={15} />
+            <RotateCcw size={14} />
             Clear
           </button>
         </div>
 
         {/* Brush size */}
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500 font-500">Size</span>
+          <span className="text-xs text-[#484860]">Size</span>
           <input
             type="range"
             min={12}
             max={80}
             value={brushSize}
             onChange={(e) => setBrushSize(Number(e.target.value))}
-            className="w-24 accent-violet-500"
+            className="w-28 accent-violet-500"
           />
-          <span className="text-xs text-gray-400 w-8">{brushSize}px</span>
+          <span className="text-xs text-[#8888A4] w-8">{brushSize}px</span>
         </div>
       </div>
 
       {/* Instruction input */}
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-500 text-gray-300">
-          What should change in that area? <span className="text-gray-500">(optional)</span>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#8888A4]">
+          What should change in that area? <span className="text-[#484860]">(optional)</span>
         </label>
         <input
           type="text"
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
           placeholder='e.g. "Replace with a cozy reading nook with warm lighting"'
-          className="glass rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-600 outline-none focus:border-violet-500/50 transition-colors duration-200 w-full"
+          className="card rounded-xl px-4 py-3 text-sm text-white placeholder:text-[#484860] outline-none border border-white/[0.08] focus:border-[#7C3AED]/50 transition-colors w-full"
         />
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
         <button
           onClick={onCancel}
-          className="flex-1 glass py-3 rounded-xl text-sm font-600 text-gray-300 hover:text-white transition-colors duration-200"
+          className="flex-1 card card-hover py-3 rounded-xl text-sm font-medium text-[#8888A4] hover:text-white transition-colors"
         >
           Cancel
         </button>
         <motion.button
-          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleSubmit}
-          className="flex-1 btn-brand text-white py-3 rounded-xl text-sm font-700 flex items-center justify-center gap-2 shadow-lg shadow-violet-500/30"
+          className="flex-1 btn-brand text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
         >
           <Wand2 size={16} />
           Redesign This Area

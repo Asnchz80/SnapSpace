@@ -11,19 +11,19 @@ export default function ComparisonSlider({ originalSrc, redesignedSrc, alt = 'Sp
       className="w-full relative"
     >
       {/* Labels */}
-      <div className="flex justify-between text-xs font-600 uppercase tracking-widest text-gray-500 mb-3 px-1">
+      <div className="flex justify-between text-xs font-semibold uppercase tracking-widest text-[#484860] mb-3 px-1">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-gray-500" />
+          <span className="w-2 h-2 rounded-full bg-[#484860]" />
           Before
         </span>
-        <span className="flex items-center gap-1.5 text-violet-400">
+        <span className="flex items-center gap-1.5 text-[#A78BFA]">
           After
-          <span className="w-2 h-2 rounded-full bg-violet-400" />
+          <span className="w-2 h-2 rounded-full bg-[#A78BFA]" />
         </span>
       </div>
 
       {/* Slider */}
-      <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/50 ring-1 ring-white/8">
+      <div className="rounded-xl overflow-hidden border border-white/[0.08]">
         <ReactCompareSlider
           itemOne={
             <ReactCompareSliderImage
@@ -39,12 +39,12 @@ export default function ComparisonSlider({ originalSrc, redesignedSrc, alt = 'Sp
               style={{ objectFit: 'cover' }}
             />
           }
-          style={{ height: '420px' }}
+          style={{ height: 'clamp(220px, 52vw, 420px)' }}
         />
       </div>
 
       {/* Drag hint */}
-      <div className="flex items-center justify-center gap-2 mt-3 text-xs text-gray-600">
+      <div className="flex items-center justify-center gap-2 mt-3 text-xs text-[#484860]">
         <ArrowLeftRight size={12} />
         Drag to compare before &amp; after
       </div>

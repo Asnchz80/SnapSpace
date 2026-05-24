@@ -188,27 +188,14 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center gap-10 pt-10 max-w-3xl mx-auto w-full"
+              className="flex flex-col items-center gap-10 pt-10 pb-20 max-w-2xl mx-auto w-full px-5"
             >
-              {/* Hero text */}
               <div className="text-center">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.05 }}
-                  className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-xs font-600 text-violet-300 mb-6"
-                >
-                  <Sparkles size={12} />
-                  AI-powered interior redesign
-                </motion.div>
-
-                <h1 className="text-5xl sm:text-6xl font-800 text-white leading-tight tracking-tight">
-                  Transform Your<br />
-                  <span className="text-gradient">Space Instantly</span>
+                <h1 className="text-3xl sm:text-4xl md:text-[3rem] font-bold text-white leading-[1.1] tracking-[-0.03em]">
+                  Transform any room<br />with AI
                 </h1>
-                <p className="mt-5 text-lg text-gray-400 max-w-lg mx-auto leading-relaxed">
-                  Upload a photo of your room or kitchen. AI redesigns it realistically and finds
-                  every product used — so you can actually buy what you see.
+                <p className="mt-4 text-[15px] text-[#8888A4] leading-relaxed max-w-sm mx-auto">
+                  Upload a photo of your space. Get a photorealistic redesign with shoppable product links — in under a minute.
                 </p>
               </div>
 
@@ -223,38 +210,33 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center gap-8 pt-10 max-w-2xl mx-auto w-full"
+              className="flex flex-col items-center gap-7 pt-10 pb-20 max-w-2xl mx-auto w-full px-5"
             >
-              {/* Preview thumbnail */}
-              <div className="relative rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl shadow-black/40 w-full max-h-60 flex items-center justify-center bg-surface-800">
+              {/* Photo preview */}
+              <div className="w-full rounded-2xl overflow-hidden border border-white/[0.08]">
                 <img
                   src={originalPreviewUrl}
                   alt="Your space"
-                  className="w-full h-60 object-cover"
+                  className="w-full max-h-64 object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                <div className="absolute bottom-3 left-4 text-sm font-600 text-white/70">Your space</div>
               </div>
 
               <StyleSelector selected={selectedStyle} onSelect={setSelectedStyle} />
 
-              {/* CTA */}
               <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleRedesign}
-                className="btn-brand text-white font-700 text-base px-10 py-4 rounded-2xl flex items-center gap-3 shadow-2xl shadow-violet-500/30 w-full max-w-xs justify-center"
+                className="btn-brand text-white font-semibold text-sm px-8 py-3 rounded-xl flex items-center gap-2 w-full max-w-xs justify-center"
               >
-                <Wand2 size={20} />
+                <Wand2 size={16} />
                 Redesign My Space
-                <ArrowRight size={18} className="ml-auto opacity-70" />
               </motion.button>
 
               <button
                 onClick={handleReset}
-                className="text-sm text-gray-500 hover:text-gray-300 transition-colors duration-200"
+                className="text-sm text-[#484860] hover:text-[#8888A4] transition-colors"
               >
-                ← Use a different photo
+                ← Different photo
               </button>
             </motion.section>
           )}
