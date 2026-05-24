@@ -1,6 +1,19 @@
 {
   "rules": {
-    ".read": false,
-    ".write": false
+    // Authenticated users can only read/write their own data.
+    // All other paths — including unauthenticated access — are denied.
+    "users": {
+      "$uid": {
+        ".read":  "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+
+        // Redesign history: each entry must have createdAt + style fields.
+        "redesigns": {
+          "$redesignId": {
+            ".validate": "newData.hasChildren(['createdAt', 'style'])"
+          }
+        }
+      }
+    }
   }
 }
