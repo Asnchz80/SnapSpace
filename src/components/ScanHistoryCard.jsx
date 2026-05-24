@@ -27,7 +27,7 @@ export default function ScanHistoryCard({ scan, onResume, onDelete }) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl overflow-hidden border border-black/[0.07] shadow-sm hover:shadow-md hover:border-black/[0.14] transition-all duration-200 cursor-pointer group flex flex-col"
+      className="bg-white rounded-2xl overflow-hidden border border-black/[0.10] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(0,0,0,0.07)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.11),0_12px_32px_rgba(0,0,0,0.08)] hover:border-black/[0.16] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex flex-col"
       onClick={() => onResume(scan)}
     >
       {/* Thumbnail */}

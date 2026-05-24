@@ -33,22 +33,33 @@ body {
 /* ── Card surface ────────────────────────────────────── */
 .card {
   background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.10);
   border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow:
+    0 1px 2px  rgba(0,0,0,0.05),
+    0 4px 16px rgba(0,0,0,0.07),
+    0 12px 32px rgba(0,0,0,0.04);
 }
 .card-hover:hover {
-  border-color: rgba(0, 0, 0, 0.13);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.05);
+  border-color: rgba(0, 0, 0, 0.16);
+  box-shadow:
+    0 2px 4px   rgba(0,0,0,0.06),
+    0 8px 24px  rgba(0,0,0,0.10),
+    0 20px 48px rgba(0,0,0,0.07);
+  transform: translateY(-1px);
 }
 
 /* ── Brand button ────────────────────────────────────── */
 .btn-brand {
   background: #7C3AED;
-  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(124,58,237,0.30), 0 1px 2px rgba(0,0,0,0.10);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
-.btn-brand:hover  { background: #6D28D9; }
-.btn-brand:active { transform: scale(0.98); }
+.btn-brand:hover  {
+  background: #6D28D9;
+  box-shadow: 0 4px 14px rgba(124,58,237,0.40), 0 1px 3px rgba(0,0,0,0.12);
+}
+.btn-brand:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(124,58,237,0.25); }
 
 /* ── Skeleton shimmer ────────────────────────────────── */
 .skeleton {
@@ -65,6 +76,17 @@ body {
 /* ── Hide scrollbar (style pill row) ─────────────────── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Elevated panels (upload preview, result wrapper) ── */
+.panel {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 20px;
+  box-shadow:
+    0 2px 4px   rgba(0,0,0,0.05),
+    0 8px 24px  rgba(0,0,0,0.08),
+    0 24px 56px rgba(0,0,0,0.05);
+}
 
 /* ── Compare slider ──────────────────────────────────── */
 [data-rcs="root"] { border-radius: 14px; overflow: hidden; }

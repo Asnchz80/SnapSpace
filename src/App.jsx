@@ -448,7 +448,7 @@ export default function App() {
               className="flex flex-col items-center gap-6 pt-10 pb-20 max-w-xl mx-auto w-full px-5"
             >
               {/* Photo thumbnail */}
-              <div className="w-full rounded-2xl overflow-hidden border border-black/[0.08] shadow-sm">
+              <div className="w-full rounded-2xl overflow-hidden border border-black/[0.10] shadow-[0_4px_20px_rgba(0,0,0,0.09),0_12px_40px_rgba(0,0,0,0.06)]">
                 <img
                   src={originalPreviewUrl}
                   alt="Your space"
@@ -502,7 +502,7 @@ export default function App() {
               style={{ minHeight: 0 }}
             >
               {/* ── Sticky style pills ─────────────────────── */}
-              <div className="sticky top-14 z-20 bg-[#F5F5FA]/90 backdrop-blur-xl border-b border-black/[0.07]">
+              <div className="sticky top-14 z-20 bg-[#F5F5FA]/90 backdrop-blur-xl border-b border-black/[0.10] shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
                 <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
                   {styleResults.map((sr, i) => (
                     <button

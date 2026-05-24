@@ -23,7 +23,7 @@ export default function ComparisonSlider({ originalSrc, redesignedSrc, alt = 'Sp
       </div>
 
       {/* Slider */}
-      <div className="rounded-xl overflow-hidden border border-white/[0.08]">
+      <div className="rounded-xl overflow-hidden border border-black/[0.10] shadow-[0_4px_20px_rgba(0,0,0,0.09),0_12px_40px_rgba(0,0,0,0.06)]">
         <ReactCompareSlider
           itemOne={
             <ReactCompareSliderImage

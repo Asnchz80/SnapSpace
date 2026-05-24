@@ -15,7 +15,7 @@ export default function Header({ user, onSignOut }) {
   }, [])
 
   return (
-    <header className="sticky top-0 z-30 bg-[#F5F5FA]/90 backdrop-blur-xl border-b border-black/[0.07]">
+    <header className="sticky top-0 z-30 bg-[#F5F5FA]/90 backdrop-blur-xl border-b border-black/[0.10] shadow-[0_1px_0_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
       <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
