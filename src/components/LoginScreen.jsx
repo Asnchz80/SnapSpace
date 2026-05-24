@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { signInWithPopup, signInWithRedirect } from 'firebase/auth'
-import { Sparkles, Wand2, ShoppingBag, PaintbrushIcon, Shield } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { auth, googleProvider } from '../firebase.js'
 
-// ── Google's official logo SVG (required by branding guidelines) ──
 const GoogleIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" aria-hidden="true">
+  <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
@@ -15,37 +14,25 @@ const GoogleIcon = () => (
 )
 
 const FEATURES = [
-  {
-    icon: <Wand2 size={15} />,
-    text: 'AI redesigns your room or kitchen realistically in under a minute',
-  },
-  {
-    icon: <ShoppingBag size={15} />,
-    text: 'Every item in the redesign links directly to where you can buy it',
-  },
-  {
-    icon: <PaintbrushIcon size={15} />,
-    text: 'Paint over a specific area to redesign just that spot',
-  },
+  'Photorealistic AI redesigns in under 60 seconds',
+  'Shop every product in your redesign with direct links',
+  'Repaint specific areas for targeted changes',
 ]
 
 export default function LoginScreen() {
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState(null)
 
   const handleSignIn = async () => {
     setLoading(true)
     setError(null)
     try {
       await signInWithPopup(auth, googleProvider)
-      // onAuthStateChanged in App.jsx takes over once signed in
     } catch (err) {
       if (err.code === 'auth/popup-blocked') {
-        // Popup was blocked by the browser — fall back to full-page redirect
         await signInWithRedirect(auth, googleProvider)
         return
       }
-      // Ignore user-initiated cancellations
       if (
         err.code !== 'auth/popup-closed-by-user' &&
         err.code !== 'auth/cancelled-popup-request'
@@ -57,103 +44,114 @@ export default function LoginScreen() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center relative overflow-hidden px-4 py-12">
-      {/* Background blobs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-[-15%] left-[-10%] w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-[130px]" />
-        <div className="absolute bottom-[-10%] right-[-5%]  w-[500px] h-[500px] bg-blue-600/10  rounded-full blur-[120px]" />
-        <div className="absolute top-[40%]  right-[20%]    w-[300px] h-[300px] bg-indigo-600/6  rounded-full blur-[90px]"  />
+    <div className="min-h-dvh bg-[#07070D] flex">
+      {/* ── Left panel ─────────────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-14 border-r border-white/[0.06] relative overflow-hidden">
+        {/* Subtle bg tint */}
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/20 via-transparent to-transparent pointer-events-none" />
+
+        {/* Logo */}
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="w-9 h-9 rounded-xl bg-[#7C3AED] flex items-center justify-center">
+            <Sparkles size={17} className="text-white" />
+          </div>
+          <span className="text-xl font-semibold tracking-tight text-white">SnapSpace</span>
+        </div>
+
+        {/* Main copy */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 max-w-md"
+        >
+          <h1 className="text-5xl font-bold text-white leading-[1.1] tracking-[-0.03em]">
+            Your space,<br />redesigned<br />by AI.
+          </h1>
+          <p className="mt-5 text-[17px] text-[#8888A4] leading-relaxed">
+            Upload a photo of any room. Get a photorealistic redesign with real,
+            shoppable product links — in under a minute.
+          </p>
+          <ul className="mt-9 space-y-3.5">
+            {FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-3 text-sm text-[#8888A4]">
+                <div className="w-5 h-5 rounded-full bg-[#7C3AED]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check size={11} className="text-[#A78BFA]" />
+                </div>
+                {f}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+
+        {/* Footer */}
+        <p className="text-sm text-[#484860] relative z-10">
+          Free to use · No credit card required
+        </p>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md flex flex-col items-center gap-8"
-      >
-        {/* ── Brand mark ─────────────────────────── */}
+      {/* ── Right panel — sign in ──────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center px-6 py-16">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.05, duration: 0.4 }}
-          className="flex items-center gap-3"
-        >
-          <div className="w-13 h-13 w-[52px] h-[52px] rounded-2xl btn-brand flex items-center justify-center shadow-2xl shadow-violet-500/40">
-            <Sparkles size={26} className="text-white" />
-          </div>
-          <span className="text-[2rem] font-800 text-white tracking-tight leading-none">
-            Snap<span className="text-gradient">Space</span>
-          </span>
-        </motion.div>
-
-        {/* ── Headline ───────────────────────────── */}
-        <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl font-700 text-white leading-snug">
-            Transform any room<br />with AI design
-          </h1>
-          <p className="mt-3 text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-            Upload a photo and get a photorealistic redesign with real product
-            links — in under 60 seconds.
-          </p>
-        </div>
-
-        {/* ── Feature cards ──────────────────────── */}
-        <div className="w-full flex flex-col gap-2.5">
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -14 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.18 + i * 0.08 }}
-              className="flex items-center gap-3 glass rounded-xl px-4 py-3"
-            >
-              <span className="text-violet-400 flex-shrink-0">{f.icon}</span>
-              <span className="text-sm text-gray-300">{f.text}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ── Sign-in card ───────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.42 }}
-          className="w-full glass rounded-2xl p-6 flex flex-col items-center gap-4"
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-sm"
         >
-          <p className="text-sm text-gray-400 font-500">Sign in to get started — it's free</p>
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-3 mb-10 justify-center">
+            <div className="w-9 h-9 rounded-xl bg-[#7C3AED] flex items-center justify-center">
+              <Sparkles size={17} className="text-white" />
+            </div>
+            <span className="text-xl font-semibold tracking-tight text-white">SnapSpace</span>
+          </div>
 
-          <motion.button
-            onClick={handleSignIn}
-            disabled={loading}
-            whileHover={{ scale: loading ? 1 : 1.02 }}
-            whileTap={{ scale: loading ? 1 : 0.97 }}
-            className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-600 text-sm py-3.5 rounded-xl shadow-md hover:shadow-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {loading
-              ? <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
-              : <GoogleIcon />
-            }
-            <span>{loading ? 'Signing in…' : 'Continue with Google'}</span>
-          </motion.button>
+          <h2 className="text-2xl font-semibold text-white tracking-tight">Sign in</h2>
+          <p className="mt-1.5 text-sm text-[#8888A4]">Continue to SnapSpace — it's free</p>
 
-          {error && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-sm text-red-400 text-center"
+          <div className="mt-8">
+            <button
+              onClick={handleSignIn}
+              disabled={loading}
+              className="w-full h-11 flex items-center justify-center gap-3 bg-white text-gray-900 text-sm font-medium rounded-xl shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {error}
-            </motion.p>
-          )}
-        </motion.div>
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+              ) : (
+                <GoogleIcon />
+              )}
+              Continue with Google
+            </button>
 
-        {/* ── Privacy note ───────────────────────── */}
-        <p className="text-xs text-gray-600 text-center max-w-xs leading-relaxed flex items-start gap-1.5">
-          <Shield size={11} className="mt-0.5 flex-shrink-0 text-gray-700" />
-          We only use your Google account to identify you. We never post, share, or access
-          anything outside this app.
-        </p>
-      </motion.div>
+            {error && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-3 text-sm text-red-400 text-center"
+              >
+                {error}
+              </motion.p>
+            )}
+          </div>
+
+          {/* Mobile features */}
+          <ul className="lg:hidden mt-10 space-y-3">
+            {FEATURES.map((f) => (
+              <li key={f} className="flex items-start gap-3 text-sm text-[#8888A4]">
+                <div className="w-5 h-5 rounded-full bg-[#7C3AED]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check size={11} className="text-[#A78BFA]" />
+                </div>
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-10 text-xs text-[#484860] text-center leading-relaxed">
+            By signing in you agree to our Terms of Service.<br />
+            We never post or share your data.
+          </p>
+        </motion.div>
+      </div>
     </div>
   )
 }

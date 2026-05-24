@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import {
-  Wand2, RotateCcw, Sparkles, PaintbrushIcon, ChevronRight, ArrowRight,
+  Wand2, RotateCcw, PaintbrushIcon,
 } from 'lucide-react'
 import { auth } from './firebase.js'
 import LoginScreen from './components/LoginScreen.jsx'
@@ -158,8 +158,11 @@ export default function App() {
   // ── Auth guards ───────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#07070C]">
-        <div className="w-12 h-12 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
+      <div className="min-h-dvh flex items-center justify-center bg-[#07070D]">
+        <div className="relative w-10 h-10">
+          <div className="absolute inset-0 rounded-full border-2 border-white/[0.06]" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#7C3AED] animate-spin" />
+        </div>
       </div>
     )
   }
@@ -167,16 +170,15 @@ export default function App() {
   if (!user) return <LoginScreen />
 
   return (
-    <div className="min-h-dvh flex flex-col relative overflow-x-hidden">
-      {/* Background glow blobs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-violet-600/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-600/8 rounded-full blur-[120px]" />
+    <div className="min-h-dvh flex flex-col">
+      {/* Subtle top radial glow */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-b from-violet-950/15 to-transparent" />
       </div>
 
       <Header user={user} onSignOut={handleSignOut} />
 
-      <main className="flex-1 flex flex-col px-4 pb-16">
+      <main className="flex-1 flex flex-col">
         <AnimatePresence mode="wait">
 
           {/* ── UPLOAD step ──────────────────────────────── */}
@@ -211,16 +213,6 @@ export default function App() {
               </div>
 
               <UploadZone onImageSelected={handleImageSelected} />
-
-              {/* Social proof */}
-              <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-3 text-sm text-gray-500">
-                {['Signed in as ' + (user.displayName?.split(' ')[0] ?? 'you'), '20–40 s redesign', 'Real product links'].map((s) => (
-                  <span key={s} className="flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-violet-500" />
-                    {s}
-                  </span>
-                ))}
-              </div>
             </motion.section>
           )}
 
@@ -267,14 +259,14 @@ export default function App() {
             </motion.section>
           )}
 
-          {/* ── PROCESSING step ───────────────────────────── */}
+          {/* ── PROCESSING step ─────────────────────────────────────────── */}
           {step === STEP.PROCESSING && (
             <motion.section
               key="processing"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="max-w-lg mx-auto w-full pt-6"
+              className="max-w-lg mx-auto w-full px-5"
             >
               <LoadingState />
             </motion.section>
@@ -287,45 +279,45 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col gap-10 pt-8 max-w-4xl mx-auto w-full"
+              className="flex flex-col gap-8 pt-8 pb-20 max-w-4xl mx-auto w-full px-5"
             >
               {/* Error banner */}
               {error && (
-                <div className="glass border-amber-500/30 rounded-xl px-4 py-3 text-sm text-amber-300">
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-300">
                   ⚠️ {error}
                 </div>
               )}
 
-              {/* Comparison slider */}
+              {/* Comparison */}
               <div>
-                <h2 className="text-2xl font-700 text-white mb-6">
-                  Your Redesign
-                  <span className="ml-3 text-sm font-500 text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-white">Your Redesign</h2>
+                  <span className="text-xs font-medium text-[#A78BFA] bg-[#7C3AED]/10 border border-[#7C3AED]/20 px-3 py-1 rounded-full">
                     {selectedStyle}
                   </span>
-                </h2>
+                </div>
                 <ComparisonSlider
                   originalSrc={originalPreviewUrl}
                   redesignedSrc={result.redesignedImageUrl}
                 />
               </div>
 
-              {/* Design description */}
+              {/* Design notes */}
               {result.description && (
-                <div className="glass rounded-2xl p-5">
-                  <p className="text-sm font-600 text-violet-400 uppercase tracking-widest mb-2">Design Notes</p>
-                  <p className="text-gray-300 leading-relaxed text-sm">{result.description}</p>
+                <div className="card p-5">
+                  <p className="text-xs font-medium text-[#484860] uppercase tracking-widest mb-2.5">Design Notes</p>
+                  <p className="text-sm text-[#8888A4] leading-relaxed">{result.description}</p>
                 </div>
               )}
 
-              {/* Product grid */}
+              {/* Products */}
               {result.products?.length > 0 && (
                 <div>
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-xl font-700 text-white">Shop the Look</h3>
-                    <span className="text-sm text-gray-500">{result.products.length} items found</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-semibold text-white">Shop the Look</h3>
+                    <span className="text-xs text-[#484860]">{result.products.length} items</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {result.products.map((product, i) => (
                       <ProductCard key={`${product.name}-${i}`} product={product} index={i} />
                     ))}
@@ -334,27 +326,21 @@ export default function App() {
               )}
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-3 justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <div className="flex flex-wrap gap-2.5 justify-center pt-2 pb-8">
+                <button
                   onClick={() => setStep(STEP.AREA_SELECT)}
-                  className="glass hover:bg-white/5 text-white font-600 px-6 py-3 rounded-xl flex items-center gap-2 text-sm transition-all duration-200"
+                  className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
                 >
-                  <PaintbrushIcon size={16} className="text-violet-400" />
+                  <PaintbrushIcon size={14} className="text-[#A78BFA]" />
                   Redo a specific area
-                  <ChevronRight size={14} className="text-gray-500" />
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                </button>
+                <button
                   onClick={handleReset}
-                  className="glass hover:bg-white/5 text-gray-300 hover:text-white font-600 px-6 py-3 rounded-xl flex items-center gap-2 text-sm transition-all duration-200"
+                  className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
                 >
-                  <RotateCcw size={15} />
+                  <RotateCcw size={14} />
                   Try a different space
-                </motion.button>
+                </button>
               </div>
             </motion.section>
           )}
@@ -366,7 +352,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-3xl mx-auto w-full pt-8"
+              className="max-w-3xl mx-auto w-full pt-8 pb-20 px-5"
             >
               <AreaSelector
                 imageFile={imageFile}

@@ -33,51 +33,46 @@ export default function UploadZone({ onImageSelected }) {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      {/* Drop zone */}
+    <div className="w-full">
       <motion.div
         onDrop={handleDrop}
-        onDragOver={handleDragOver}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
         onClick={() => inputRef.current?.click()}
         animate={{
-          borderColor: isDragging ? 'rgba(139,92,246,0.8)' : 'rgba(139,92,246,0.25)',
-          backgroundColor: isDragging ? 'rgba(139,92,246,0.06)' : 'rgba(255,255,255,0.02)',
+          borderColor: isDragging ? 'rgba(124,58,237,0.55)' : 'rgba(255,255,255,0.1)',
+          backgroundColor: isDragging ? 'rgba(124,58,237,0.05)' : 'transparent',
         }}
-        whileHover={{ borderColor: 'rgba(139,92,246,0.5)', backgroundColor: 'rgba(139,92,246,0.04)' }}
-        transition={{ duration: 0.2 }}
-        className="relative border-2 border-dashed rounded-2xl p-14 flex flex-col items-center gap-5 cursor-pointer"
-        style={{ borderColor: 'rgba(139,92,246,0.25)' }}
+        className="group relative border-2 border-dashed rounded-2xl p-14 cursor-pointer flex flex-col items-center gap-5"
+        style={{ borderColor: 'rgba(255,255,255,0.1)' }}
       >
-        {/* Glow orb */}
-        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl" />
-        </div>
-
         <AnimatePresence mode="wait">
           <motion.div
-            key={isDragging ? 'dropping' : 'idle'}
-            initial={{ scale: 0.8, opacity: 0 }}
+            key={isDragging ? 'drop' : 'idle'}
+            initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="w-16 h-16 rounded-2xl btn-brand flex items-center justify-center shadow-xl shadow-violet-500/30 animate-float"
+            exit={{ scale: 0.85, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="w-14 h-14 rounded-xl card flex items-center justify-center group-hover:border-[#7C3AED]/40 transition-colors"
           >
             {isDragging
-              ? <ImageIcon size={28} className="text-white" />
-              : <UploadCloud size={28} className="text-white" />
+              ? <ImageIcon size={22} className="text-[#A78BFA]" />
+              : <UploadCloud size={22} className="text-[#8888A4] group-hover:text-[#A78BFA] transition-colors" />
             }
           </motion.div>
         </AnimatePresence>
 
-        <div className="text-center z-10">
-          <p className="text-lg font-600 text-white mb-1">
-            {isDragging ? 'Drop to redesign' : 'Upload your space'}
+        <div className="text-center">
+          <p className="text-base font-medium text-white">
+            {isDragging ? 'Drop to upload' : 'Upload a photo of your space'}
           </p>
-          <p className="text-sm text-gray-400">
-            Drag &amp; drop a photo, or <span className="text-violet-400 underline">browse files</span>
+          <p className="text-sm text-[#8888A4] mt-1">
+            Drag &amp; drop, or{' '}
+            <span className="text-[#A78BFA] group-hover:text-violet-300 transition-colors">
+              click to browse
+            </span>
           </p>
-          <p className="text-xs text-gray-600 mt-2">JPG, PNG, HEIC — up to 20 MB</p>
+          <p className="text-xs text-[#484860] mt-3">JPG · PNG · HEIC — up to 20 MB</p>
         </div>
 
         <input
@@ -89,17 +84,13 @@ export default function UploadZone({ onImageSelected }) {
         />
       </motion.div>
 
-      {/* Camera button (mobile-friendly) */}
-      <motion.button
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+      <button
         onClick={handleCapture}
-        className="mt-4 w-full flex items-center justify-center gap-2 glass text-gray-300 hover:text-white py-3 rounded-xl text-sm font-500 transition-colors duration-200 hover:bg-white/5"
+        className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-white/[0.08] text-sm text-[#8888A4] hover:text-white hover:border-white/[0.16] transition-colors"
       >
-        <Camera size={16} />
-        Take a photo with your camera
-      </motion.button>
+        <Camera size={14} />
+        Use camera
+      </button>
     </div>
   )
 }

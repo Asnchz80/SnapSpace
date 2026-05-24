@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles } from 'lucide-react'
 
 const STEPS = [
   'Analyzing your space…',
@@ -12,66 +11,45 @@ const STEPS = [
 
 export default function LoadingState() {
   const [stepIndex, setStepIndex] = useState(0)
-  const [progress, setProgress] = useState(0)
+  const [progress, setProgress]   = useState(0)
 
   useEffect(() => {
     const stepInterval = setInterval(() => {
-      setStepIndex((prev) => (prev < STEPS.length - 1 ? prev + 1 : prev))
+      setStepIndex((p) => (p < STEPS.length - 1 ? p + 1 : p))
     }, 4000)
-
     const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) return 95
-        return prev + Math.random() * 4
-      })
+      setProgress((p) => (p >= 95 ? 95 : p + Math.random() * 3.5))
     }, 800)
-
-    return () => {
-      clearInterval(stepInterval)
-      clearInterval(progressInterval)
-    }
+    return () => { clearInterval(stepInterval); clearInterval(progressInterval) }
   }, [])
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="flex flex-col items-center gap-8 py-16"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex flex-col items-center gap-8 py-20"
     >
-      {/* Animated icon */}
-      <div className="relative">
+      {/* Spinner */}
+      <div className="relative w-14 h-14">
+        <div className="absolute inset-0 rounded-full border-2 border-white/[0.06]" />
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-          className="w-24 h-24 rounded-full border-2 border-transparent"
-          style={{
-            background:
-              'linear-gradient(#07070C, #07070C) padding-box, linear-gradient(135deg, #8B5CF6, #3B82F6) border-box',
-          }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#7C3AED]"
         />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            animate={{ scale: [1, 1.15, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Sparkles size={32} className="text-violet-400" />
-          </motion.div>
-        </div>
-        {/* Glow */}
-        <div className="absolute inset-0 rounded-full bg-violet-500/20 blur-xl -z-10" />
       </div>
 
       {/* Step text */}
-      <div className="text-center h-7">
+      <div className="h-6 flex items-center">
         <AnimatePresence mode="wait">
           <motion.p
             key={stepIndex}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.4 }}
-            className="text-lg font-500 text-white"
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3 }}
+            className="text-sm font-medium text-white"
           >
             {STEPS[stepIndex]}
           </motion.p>
@@ -79,16 +57,15 @@ export default function LoadingState() {
       </div>
 
       {/* Progress bar */}
-      <div className="w-72 h-1.5 bg-surface-600 rounded-full overflow-hidden">
+      <div className="w-56 h-[3px] bg-white/[0.06] rounded-full overflow-hidden">
         <motion.div
-          className="h-full rounded-full"
-          style={{ background: 'linear-gradient(90deg, #8B5CF6, #3B82F6)' }}
+          className="h-full bg-[#7C3AED] rounded-full"
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
         />
       </div>
 
-      <p className="text-sm text-gray-500">This usually takes 20–40 seconds</p>
+      <p className="text-xs text-[#484860]">Usually 20–40 seconds</p>
     </motion.div>
   )
 }
