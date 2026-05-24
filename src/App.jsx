@@ -7,7 +7,7 @@ import Header from './components/Header.jsx'
 import UploadZone from './components/UploadZone.jsx'
 import StyleResultCard from './components/StyleResultCard.jsx'
 import AreaSelector from './components/AreaSelector.jsx'
-import { redesignSpace, redesignArea } from './services/aiService.js'
+import { redesignSpace, redesignArea, chatRedesign } from './services/aiService.js'
 
 // ── Step constants ────────────────────────────────────────────
 const STEP = {
@@ -102,7 +102,14 @@ export default function App() {
     const url = URL.createObjectURL(file)
     setOriginalPreviewUrl(url)
 
-    const initial = REDESIGN_STYLES.map(s => ({ ...s, status: 'loading', result: null, error: null }))
+    const initial = REDESIGN_STYLES.map(s => ({
+      ...s,
+      status: 'loading',
+      result: null,
+      error: null,
+      chatHistory: [],
+      chatLoading: false,
+    }))
     setStyleResults(initial)
     setActiveIdx(0)
     setStep(STEP.RESULT)
@@ -127,6 +134,64 @@ export default function App() {
         })
     })
   }, [])
+
+  // ── Chat modification — update one style slot ─────────────
+  const handleChat = useCallback(async (styleIdx, message, currentChatHistory) => {
+    const styleName = styleResults[styleIdx]?.id ?? 'Modern'
+
+    // Append user message + set loading
+    setStyleResults(prev => {
+      const next = [...prev]
+      next[styleIdx] = {
+        ...next[styleIdx],
+        chatLoading: true,
+        chatHistory: [...currentChatHistory, { role: 'user', content: message }],
+      }
+      return next
+    })
+
+    // Build plain-string history the AI service expects
+    const userMessages = currentChatHistory
+      .filter(m => m.role === 'user')
+      .map(m => m.content)
+
+    try {
+      const data = await chatRedesign(imageFile, styleName, userMessages, message)
+      setStyleResults(prev => {
+        const next = [...prev]
+        next[styleIdx] = {
+          ...next[styleIdx],
+          chatLoading: false,
+          status: 'done',
+          result: {
+            ...next[styleIdx].result,
+            redesignedImageUrl: data.redesignedImageUrl,
+            description: data.description,
+            products: data.products,
+          },
+          chatHistory: [
+            ...next[styleIdx].chatHistory,
+            { role: 'assistant', content: data.description },
+          ],
+        }
+        return next
+      })
+    } catch (err) {
+      console.error('Chat redesign error:', err)
+      setStyleResults(prev => {
+        const next = [...prev]
+        next[styleIdx] = {
+          ...next[styleIdx],
+          chatLoading: false,
+          chatHistory: [
+            ...next[styleIdx].chatHistory,
+            { role: 'assistant', content: `Couldn't apply that change: ${err.message}` },
+          ],
+        }
+        return next
+      })
+    }
+  }, [imageFile, styleResults])
 
   // ── Area redo — replaces the active style's result ─────────
   const handleAreaSubmit = async (maskDataUrl, instruction) => {
@@ -279,6 +344,7 @@ export default function App() {
                         originalSrc={originalPreviewUrl}
                         onRedoArea={() => { setActiveIdx(i); setStep(STEP.AREA_SELECT) }}
                         onReset={handleReset}
+                        onChat={(msg) => handleChat(i, msg, sr.chatHistory ?? [])}
                       />
                     </div>
                   </div>

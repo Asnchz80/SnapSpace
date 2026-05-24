@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion'
-import { PaintbrushIcon, RotateCcw } from 'lucide-react'
+import { PaintbrushIcon, RotateCcw, Ruler, Home, Info } from 'lucide-react'
 import ComparisonSlider from './ComparisonSlider.jsx'
 import ProductCard from './ProductCard.jsx'
+import ChatBar from './ChatBar.jsx'
 
 // ── Loading placeholder ─────────────────────────────────────────
 function LoadingPanel({ style, emoji }) {
@@ -29,7 +30,7 @@ function LoadingPanel({ style, emoji }) {
 }
 
 // ── Error state ─────────────────────────────────────────────────
-function ErrorPanel({ error, onRetry }) {
+function ErrorPanel({ error }) {
   return (
     <div className="flex flex-col items-center justify-center gap-5 py-24 px-5">
       <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl">
@@ -43,9 +44,46 @@ function ErrorPanel({ error, onRetry }) {
   )
 }
 
+// ── Room specs pill row ──────────────────────────────────────────
+function RoomSpecs({ roomType, estimatedSqFt, roomDimensions, ceilingHeight, floorPlanNotes }) {
+  const items = [
+    roomType          && { icon: Home,   label: roomType },
+    estimatedSqFt     && { icon: Ruler,  label: `~${estimatedSqFt} sq ft` },
+    roomDimensions    && { icon: null,   label: roomDimensions },
+    ceilingHeight     && { icon: null,   label: `Ceiling: ${ceilingHeight}` },
+  ].filter(Boolean)
+
+  if (items.length === 0 && !floorPlanNotes) return null
+
+  return (
+    <div className="card p-4 flex flex-col gap-3">
+      <div className="flex items-center gap-1.5">
+        <Info size={12} className="text-[#A78BFA]" />
+        <span className="text-[10px] font-medium text-[#484860] uppercase tracking-widest">Room Analysis</span>
+      </div>
+      {items.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {items.map(({ icon: Icon, label }, i) => (
+            <span
+              key={i}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-white/[0.04] border border-white/[0.07] text-[#8888A4]"
+            >
+              {Icon && <Icon size={10} className="text-[#7C3AED]" />}
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
+      {floorPlanNotes && (
+        <p className="text-xs text-[#484860] leading-relaxed">{floorPlanNotes}</p>
+      )}
+    </div>
+  )
+}
+
 // ── Main card ───────────────────────────────────────────────────
-export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, onReset }) {
-  const { id: style, emoji, status, result, error } = styleResult
+export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, onReset, onChat }) {
+  const { id: style, emoji, status, result, error, chatHistory = [], chatLoading = false } = styleResult
 
   if (status === 'loading') return <LoadingPanel style={style} emoji={emoji} />
   if (status === 'error')   return <ErrorPanel error={error} />
@@ -70,6 +108,17 @@ export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, 
         redesignedSrc={result.redesignedImageUrl}
         alt={style}
       />
+
+      {/* Room specs */}
+      {(result.roomType || result.estimatedSqFt || result.roomDimensions) && (
+        <RoomSpecs
+          roomType={result.roomType}
+          estimatedSqFt={result.estimatedSqFt}
+          roomDimensions={result.roomDimensions}
+          ceilingHeight={result.ceilingHeight}
+          floorPlanNotes={result.floorPlanNotes}
+        />
+      )}
 
       {/* Design notes */}
       {result.description && (
@@ -97,7 +146,7 @@ export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, 
       )}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-2.5 justify-center pt-2 pb-10">
+      <div className="flex flex-wrap gap-2.5 justify-center pt-2">
         <button
           onClick={onRedoArea}
           className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
@@ -113,6 +162,16 @@ export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, 
           New photo
         </button>
       </div>
+
+      {/* AI chat bar */}
+      <ChatBar
+        chatHistory={chatHistory}
+        onSend={onChat}
+        isLoading={chatLoading}
+      />
+
+      {/* bottom spacer */}
+      <div className="pb-6" />
     </motion.div>
   )
 }

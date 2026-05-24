@@ -116,7 +116,11 @@ export async function redesignSpace(imageFile, style = 'Modern') {
   const raw    = analysisResult.response.text().trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
   const parsed = JSON.parse(raw)
-  const { imagePrompt, description, products = [] } = parsed
+  const {
+    imagePrompt, description, products = [],
+    roomType = '', estimatedSqFt = null, roomDimensions = '',
+    ceilingHeight = '', floorPlanNotes = '',
+  } = parsed
 
   // Step 2 — Generate the redesigned image (image-to-image: original photo + prompt)
   const finalPrompt = [
@@ -135,6 +139,12 @@ export async function redesignSpace(imageFile, style = 'Modern') {
     redesignedImageUrl,
     description,
     products: products.map((p) => ({ ...p, searchUrl: buildSearchUrl(p.store, p.name) })),
+    roomType,
+    estimatedSqFt,
+    roomDimensions,
+    ceilingHeight,
+    floorPlanNotes,
+    imagePrompt, // kept so chat can build on it
   }
 }
 
@@ -163,7 +173,11 @@ export async function redesignArea(originalImageFile, maskDataUrl, instruction, 
   const raw    = analysisResult.response.text().trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
   const parsed = JSON.parse(raw)
-  const { imagePrompt, description, products = [] } = parsed
+  const {
+    imagePrompt, description, products = [],
+    roomType = '', estimatedSqFt = null, roomDimensions = '',
+    ceilingHeight = '', floorPlanNotes = '',
+  } = parsed
 
   // Step 2 — Generate updated image (image-to-image: original photo + prompt)
   const finalPrompt = [
@@ -175,6 +189,81 @@ export async function redesignArea(originalImageFile, maskDataUrl, instruction, 
     'Seamless integration: the redesigned area must blend naturally with the unchanged parts.',
     'Matching lighting and shadows across old and new areas. No text, no watermarks.',
   ].join(' ')
+  const redesignedImageUrl = await generateImage(finalPrompt, base64, mimeType)
+
+  return {
+    redesignedImageUrl,
+    description,
+    products: products.map((p) => ({ ...p, searchUrl: buildSearchUrl(p.store, p.name) })),
+    roomType,
+    estimatedSqFt,
+    roomDimensions,
+    ceilingHeight,
+    floorPlanNotes,
+    imagePrompt,
+  }
+}
+
+/**
+ * Apply a chat modification to the current redesign.
+ * chatHistory = array of strings (user messages so far, oldest first).
+ * Returns { redesignedImageUrl, description, products }
+ */
+export async function chatRedesign(imageFile, style, chatHistory, newMessage) {
+  if (!genAI) throw new Error('VITE_GEMINI_API_KEY is not configured.')
+
+  const base64   = await fileToBase64(imageFile)
+  const mimeType = imageFile.type || 'image/jpeg'
+
+  const historyContext = chatHistory.length > 0
+    ? `\nModifications already applied (keep all of these):\n${chatHistory.map((m, i) => `${i + 1}. ${m}`).join('\n')}\n`
+    : ''
+
+  const prompt = `
+You are a professional interior designer AI. The room photo has been redesigned in ${style} style.
+${historyContext}
+The user now wants this additional modification: "${newMessage}"
+
+Apply ALL previous modifications plus this new one.
+Keep the EXACT same room geometry (walls, ceiling, floor, windows, doors). Do NOT change structural elements.
+Only change what the user requests — keep everything else from the current design.
+The result must look like a REAL PHOTOGRAPH, NOT a 3D render or illustration.
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "imagePrompt": "Hyper-realistic DSLR photograph, same room geometry. ${style} style with all previous modifications plus: [describe the new change and full resulting design in exhaustive detail — furniture, finishes, lighting, colors, materials at proper scale]. Same camera angle. No CGI, no 3D render.",
+  "description": "One sentence describing exactly what changed.",
+  "products": [
+    {
+      "name": "exact real product name",
+      "category": "Furniture|Lighting|Textiles|Decor|Storage|Appliances",
+      "priceRange": "$XX–$XX",
+      "store": "IKEA|Wayfair|West Elm|Amazon|CB2|Pottery Barn|Target|Crate & Barrel",
+      "reason": "why this fits"
+    }
+  ]
+}
+`.trim()
+
+  const analysisModel  = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+  const analysisResult = await analysisModel.generateContent([
+    { inlineData: { data: base64, mimeType } },
+    { text: prompt },
+  ])
+
+  const raw    = analysisResult.response.text().trim()
+    .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
+  const parsed = JSON.parse(raw)
+  const { imagePrompt, description, products = [] } = parsed
+
+  const finalPrompt = [
+    'Hyper-realistic interior design photograph taken with a DSLR camera.',
+    'Same room as the reference photo — same walls, ceiling, floor, windows, doors, camera angle.',
+    imagePrompt,
+    'REAL PHOTOGRAPH output. NOT a 3D render, NOT CGI, NOT illustrated.',
+    'Canon EOS R5, 24mm lens. No text, no watermarks.',
+  ].join(' ')
+
   const redesignedImageUrl = await generateImage(finalPrompt, base64, mimeType)
 
   return {
