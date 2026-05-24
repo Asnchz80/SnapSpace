@@ -89,10 +89,12 @@ export default function App() {
     return () => clearTimeout(t)
   }, [activeIdx])
 
-  // ── Auto-advance to first completed result ─────────────────
+  // ── Auto-advance to first completed result (initial load only) ───────────
   useEffect(() => {
     if (step !== STEP.RESULT || styleResults.length === 0) return
     if (styleResults[activeIdx]?.status !== 'loading') return
+    // If the style already has image history it's an area redo — stay put
+    if ((styleResults[activeIdx]?.imageHistory?.length ?? 0) > 0) return
     const first = styleResults.findIndex(r => r.status !== 'loading')
     if (first !== -1) setActiveIdx(first)
   }, [styleResults, step]) // eslint-disable-line react-hooks/exhaustive-deps
