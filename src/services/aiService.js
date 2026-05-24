@@ -35,19 +35,22 @@ function buildSearchUrl(store, productName) {
 
 // ── Prompt schema ──────────────────────────────────────────────
 const ANALYSIS_PROMPT = (style, extra = '') => `
-You are a professional interior designer AI.
-Analyze the uploaded photo of a room or kitchen and redesign it in ${style} style.
+You are a professional interior designer and architectural photographer AI.
+Analyze the uploaded photo of a real room and redesign it in ${style} style.
 
 Rules:
-- Keep the same room structure, walls, windows, doors, and floor plan.
-- Make the redesign realistic — no fantasy or impossible architecture.
+- Keep the EXACT same room geometry: same walls, ceiling height, floor shape, windows, doors, and architectural features. Do NOT change the room structure.
+- Replace only furniture, decor, textiles, lighting fixtures, and surface finishes (paint, flooring, etc.).
+- The output must look like a REAL PHOTOGRAPH taken with a DSLR camera — hyper-realistic, photographic quality. NOT a 3D render, NOT illustrated, NOT CGI, NOT animated.
+- Match the original photo's perspective, camera angle, and field of view exactly.
+- Use realistic lighting: natural light from windows plus artificial light matching the style. Realistic shadows, reflections, and material textures.
 - Recommend 4-6 specific purchasable products (furniture, lighting, textiles, decor, storage).
 - Products must be from: IKEA, Wayfair, West Elm, Amazon, CB2, Pottery Barn, Target, or Crate & Barrel.
 ${extra}
 
 Return ONLY valid JSON (no markdown fences, no extra text):
 {
-  "imagePrompt": "extremely detailed photorealistic prompt for generating the redesigned room image — describe every element, lighting, materials, colors, and style precisely",
+  "imagePrompt": "Hyper-realistic DSLR interior photograph. Same room: [describe the exact walls, windows, floor, ceiling from the photo]. Redesigned in ${style} style: [describe all new furniture, finishes, lighting, colors, and materials in exhaustive detail]. Same camera angle and perspective as the original photo. Photorealistic shadows and reflections. Shot on Canon EOS R5 with 24mm f/2.8 lens. No CGI look, no 3D render, no illustration style.",
   "description": "1-2 sentence plain-English summary of the redesign",
   "products": [
     {
@@ -62,23 +65,28 @@ Return ONLY valid JSON (no markdown fences, no extra text):
 `.trim()
 
 // ── Generate image via Gemini 2.0 Flash image generation ───────
-async function generateImage(prompt) {
+// Pass originalBase64 + mimeType to use image-to-image (keeps room structure)
+async function generateImage(prompt, originalBase64, mimeType) {
   const model = genAI.getGenerativeModel({
     model: 'gemini-2.0-flash-preview-image-generation',
   })
 
+  const parts = []
+  // Include the original photo so the model preserves room geometry
+  if (originalBase64 && mimeType) {
+    parts.push({ inlineData: { data: originalBase64, mimeType } })
+  }
+  parts.push({ text: prompt })
+
   const result = await model.generateContent({
-    contents: [{
-      role: 'user',
-      parts: [{ text: prompt }],
-    }],
+    contents: [{ role: 'user', parts }],
     generationConfig: {
       responseModalities: ['IMAGE', 'TEXT'],
     },
   })
 
-  const parts = result.response.candidates?.[0]?.content?.parts ?? []
-  for (const part of parts) {
+  const responseParts = result.response.candidates?.[0]?.content?.parts ?? []
+  for (const part of responseParts) {
     if (part.inlineData?.data) {
       return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`
     }
@@ -110,9 +118,18 @@ export async function redesignSpace(imageFile, style = 'Modern') {
   const parsed = JSON.parse(raw)
   const { imagePrompt, description, products = [] } = parsed
 
-  // Step 2 — Generate the redesigned image
-  const finalPrompt = `Photorealistic interior design photograph. ${imagePrompt}. Same room dimensions, walls, windows, and doors as the original. Professional real estate photography lighting. No text or watermarks.`
-  const redesignedImageUrl = await generateImage(finalPrompt)
+  // Step 2 — Generate the redesigned image (image-to-image: original photo + prompt)
+  const finalPrompt = [
+    'Hyper-realistic interior design photograph taken with a DSLR camera.',
+    'This is the SAME room as the reference photo — same walls, same ceiling, same floor plan, same windows, same doors, same camera angle and perspective.',
+    'Only replace the furniture, decor, textiles, lighting fixtures, and surface finishes.',
+    imagePrompt,
+    'Output must look like a REAL PHOTOGRAPH, NOT a 3D render, NOT CGI, NOT illustrated, NOT animated.',
+    'Photorealistic materials: accurate wood grain, fabric weave, metal reflections, glass transparency.',
+    'Natural window light plus style-appropriate artificial lighting. Realistic shadows and depth.',
+    'Professional real estate photography. Shot on Canon EOS R5, 24mm lens, f/5.6. No text, no watermarks.',
+  ].join(' ')
+  const redesignedImageUrl = await generateImage(finalPrompt, base64, mimeType)
 
   return {
     redesignedImageUrl,
@@ -148,9 +165,17 @@ export async function redesignArea(originalImageFile, maskDataUrl, instruction, 
   const parsed = JSON.parse(raw)
   const { imagePrompt, description, products = [] } = parsed
 
-  // Step 2 — Generate updated image
-  const finalPrompt = `Photorealistic interior design photograph. ${imagePrompt}. Keep the unchanged areas of the room identical to the original. Professional lighting. No text or watermarks.`
-  const redesignedImageUrl = await generateImage(finalPrompt)
+  // Step 2 — Generate updated image (image-to-image: original photo + prompt)
+  const finalPrompt = [
+    'Hyper-realistic interior design photograph taken with a DSLR camera.',
+    'This is the SAME room as the reference photo — same walls, ceiling, floor plan, windows, doors, and camera angle.',
+    'Redesign ONLY the painted/selected area as described. Keep every other part of the room pixel-identical to the reference photo.',
+    imagePrompt,
+    'Output must look like a REAL PHOTOGRAPH, NOT a 3D render, NOT CGI, NOT illustrated, NOT animated.',
+    'Seamless integration: the redesigned area must blend naturally with the unchanged parts.',
+    'Matching lighting and shadows across old and new areas. No text, no watermarks.',
+  ].join(' ')
+  const redesignedImageUrl = await generateImage(finalPrompt, base64, mimeType)
 
   return {
     redesignedImageUrl,
