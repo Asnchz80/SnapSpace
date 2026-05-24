@@ -18,6 +18,27 @@ const fileToBase64 = (file) =>
     reader.readAsDataURL(file)
   })
 
+/**
+ * Retry a Gemini API call up to maxAttempts times on 503/UNAVAILABLE errors.
+ * Uses exponential backoff: 1.5 s → 3 s → 6 s.
+ */
+async function withRetry(fn, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      const msg = String(err?.message ?? err)
+      const retryable =
+        msg.includes('503') ||
+        msg.includes('UNAVAILABLE') ||
+        msg.includes('overloaded') ||
+        err?.status === 503
+      if (!retryable || attempt === maxAttempts) throw err
+      await new Promise(r => setTimeout(r, 1500 * attempt))
+    }
+  }
+}
+
 /** Accept a File, base64 data URL string, or regular https:// URL; return { base64, mimeType } */
 async function resolveImageSource(source) {
   if (typeof source === 'string') {
@@ -108,13 +129,13 @@ async function generateImage(prompt, originalBase64, mimeType) {
   }
   parts.push({ text: prompt })
 
-  const response = await ai.models.generateContent({
+  const response = await withRetry(() => ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: [{ role: 'user', parts }],
     config: {
       responseModalities: ['IMAGE', 'TEXT'],
     },
-  })
+  }))
 
   const responseParts = response.candidates?.[0]?.content?.parts ?? []
   for (const part of responseParts) {
@@ -138,13 +159,13 @@ export async function redesignSpace(imageFile, style = 'Modern', userNotes = '')
   const mimeType = imageFile.type || 'image/jpeg'
 
   // Step 1 — Vision analysis: understand the room and build a generation prompt
-  const analysisResponse = await ai.models.generateContent({
+  const analysisResponse = await withRetry(() => ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { inlineData: { data: base64, mimeType } },
       { text: ANALYSIS_PROMPT(style, '', userNotes) },
     ]}],
-  })
+  }))
 
   const raw    = analysisResponse.text.trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
@@ -197,13 +218,13 @@ export async function redesignArea(sourceImage, maskDataUrl, instruction, style 
     : '- The user painted over a specific area. Redesign that area to match the overall style; keep the rest identical.'
 
   // Step 1 — Analyze original image + area instruction
-  const analysisResponse = await ai.models.generateContent({
+  const analysisResponse = await withRetry(() => ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { inlineData: { data: base64, mimeType } },
       { text: ANALYSIS_PROMPT(style, extra) },
     ]}],
-  })
+  }))
 
   const raw    = analysisResponse.text.trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
@@ -279,13 +300,13 @@ Return ONLY valid JSON (no markdown fences):
 }
 `.trim()
 
-  const analysisResponse = await ai.models.generateContent({
+  const analysisResponse = await withRetry(() => ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { inlineData: { data: base64, mimeType } },
       { text: prompt },
     ]}],
-  })
+  }))
 
   const raw    = analysisResponse.text.trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
