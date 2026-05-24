@@ -1,94 +1,52 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import {
-  Wand2, RotateCcw, PaintbrushIcon,
-} from 'lucide-react'
 import { auth } from './firebase.js'
 import LoginScreen from './components/LoginScreen.jsx'
-
 import Header from './components/Header.jsx'
 import UploadZone from './components/UploadZone.jsx'
-import StyleSelector from './components/StyleSelector.jsx'
-import LoadingState from './components/LoadingState.jsx'
-import ComparisonSlider from './components/ComparisonSlider.jsx'
-import ProductCard from './components/ProductCard.jsx'
+import StyleResultCard from './components/StyleResultCard.jsx'
 import AreaSelector from './components/AreaSelector.jsx'
 import { redesignSpace, redesignArea } from './services/aiService.js'
 
 // ── Step constants ────────────────────────────────────────────
 const STEP = {
   UPLOAD:      'upload',
-  STYLE:       'style',
-  PROCESSING:  'processing',
   RESULT:      'result',
   AREA_SELECT: 'area_select',
 }
 
-// ── Fallback demo data (shown when the AI call fails or is not configured) ──
+// ── The 5 design styles generated in parallel ─────────────────
+const REDESIGN_STYLES = [
+  { id: 'Modern',       emoji: '🏙️' },
+  { id: 'Scandinavian', emoji: '🌿' },
+  { id: 'Mid-Century',  emoji: '🛋️' },
+  { id: 'Industrial',   emoji: '⚙️' },
+  { id: 'Japandi',      emoji: '🍵' },
+]
+
+// ── Fallback demo data ────────────────────────────────────────
 const DEMO_RESULT = {
   redesignedImageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=80',
   description: 'A clean modern redesign featuring warm oak tones, a statement sofa, and layered lighting to create depth and comfort.',
   products: [
-    {
-      name: 'SÖDERHAMN 3-Seat Sofa',
-      category: 'Furniture',
-      priceRange: '$799 – $1,299',
-      store: 'IKEA',
-      searchUrl: 'https://www.ikea.com/us/en/search/?q=soderhamn+sofa',
-      reason: 'Modular low-profile sofa that anchors the seating area.',
-    },
-    {
-      name: 'Arc Floor Lamp',
-      category: 'Lighting',
-      priceRange: '$150 – $280',
-      store: 'Wayfair',
-      searchUrl: 'https://www.wayfair.com/lighting/sb1/arc-floor-lamps-c1776474.html',
-      reason: 'Provides warm ambient overhead light without ceiling fixtures.',
-    },
-    {
-      name: 'Chunky Knit Throw',
-      category: 'Textiles',
-      priceRange: '$45 – $90',
-      store: 'West Elm',
-      searchUrl: 'https://www.westelm.com/search/results.html?words=chunky+knit+throw',
-      reason: 'Adds texture and warmth to the sofa without overwhelming the palette.',
-    },
-    {
-      name: 'Geometric Planter Set',
-      category: 'Decor',
-      priceRange: '$35 – $65',
-      store: 'Amazon',
-      searchUrl: 'https://www.amazon.com/s?k=geometric+planter+set+modern',
-      reason: 'Introduces organic shapes and a touch of greenery to the space.',
-    },
-    {
-      name: 'Floating Shelf Unit',
-      category: 'Storage',
-      priceRange: '$60 – $120',
-      store: 'IKEA',
-      searchUrl: 'https://www.ikea.com/us/en/search/?q=floating+wall+shelf',
-      reason: 'Keeps the floor clear while providing display and storage space.',
-    },
-    {
-      name: 'Woven Area Rug 8×10',
-      category: 'Textiles',
-      priceRange: '$180 – $420',
-      store: 'Pottery Barn',
-      searchUrl: 'https://www.potterybarn.com/shop/rugs/size-8x10-rugs/',
-      reason: 'Defines the seating zone and adds warmth underfoot.',
-    },
+    { name: 'SÖDERHAMN 3-Seat Sofa', category: 'Furniture', priceRange: '$799 – $1,299', store: 'IKEA', searchUrl: 'https://www.ikea.com/us/en/search/?q=soderhamn+sofa', reason: 'Modular low-profile sofa that anchors the seating area.' },
+    { name: 'Arc Floor Lamp', category: 'Lighting', priceRange: '$150 – $280', store: 'Wayfair', searchUrl: 'https://www.wayfair.com/lighting/sb1/arc-floor-lamps-c1776474.html', reason: 'Provides warm ambient overhead light without ceiling fixtures.' },
+    { name: 'Chunky Knit Throw', category: 'Textiles', priceRange: '$45 – $90', store: 'West Elm', searchUrl: 'https://www.westelm.com/search/results.html?words=chunky+knit+throw', reason: 'Adds texture and warmth to the sofa.' },
+    { name: 'Geometric Planter Set', category: 'Decor', priceRange: '$35 – $65', store: 'Amazon', searchUrl: 'https://www.amazon.com/s?k=geometric+planter+set+modern', reason: 'Introduces organic shapes and greenery.' },
+    { name: 'Floating Shelf Unit', category: 'Storage', priceRange: '$60 – $120', store: 'IKEA', searchUrl: 'https://www.ikea.com/us/en/search/?q=floating+wall+shelf', reason: 'Keeps the floor clear while providing display space.' },
+    { name: 'Woven Area Rug 8×10', category: 'Textiles', priceRange: '$180 – $420', store: 'Pottery Barn', searchUrl: 'https://www.potterybarn.com/shop/rugs/size-8x10-rugs/', reason: 'Defines the seating zone and adds warmth underfoot.' },
   ],
 }
 
 export default function App() {
   // ── Auth state ────────────────────────────────────────────
-  const [user, setUser]             = useState(null)
+  const [user, setUser]               = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u)
       setAuthLoading(false)
     })
     return unsubscribe
@@ -100,48 +58,103 @@ export default function App() {
   }
 
   // ── Design session state ──────────────────────────────────
-  const [step, setStep] = useState(STEP.UPLOAD)
-  const [imageFile, setImageFile] = useState(null)
+  const [step, setStep]                       = useState(STEP.UPLOAD)
+  const [imageFile, setImageFile]             = useState(null)
   const [originalPreviewUrl, setOriginalPreviewUrl] = useState(null)
-  const [selectedStyle, setSelectedStyle] = useState('Modern')
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
 
-  // ── Handle image selection ─────────────────────────────────
+  // styleResults: array of { id, emoji, status: 'loading'|'done'|'error', result, error }
+  const [styleResults, setStyleResults] = useState([])
+  const [activeIdx, setActiveIdx]       = useState(0)
+
+  // Carousel scroll ref
+  const swipeRef                = useRef(null)
+  const isProgrammatic          = useRef(false)
+
+  // ── Scroll carousel when activeIdx changes (pill click) ───
+  useEffect(() => {
+    if (!swipeRef.current) return
+    const c = swipeRef.current
+    isProgrammatic.current = true
+    c.scrollTo({ left: activeIdx * c.clientWidth, behavior: 'smooth' })
+    const t = setTimeout(() => { isProgrammatic.current = false }, 700)
+    return () => clearTimeout(t)
+  }, [activeIdx])
+
+  // ── Auto-advance to first completed result ─────────────────
+  useEffect(() => {
+    if (step !== STEP.RESULT || styleResults.length === 0) return
+    if (styleResults[activeIdx]?.status !== 'loading') return
+    const first = styleResults.findIndex(r => r.status !== 'loading')
+    if (first !== -1) setActiveIdx(first)
+  }, [styleResults, step]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Swipe scroll → update active pill ─────────────────────
+  const handleSwipeScroll = useCallback(() => {
+    if (isProgrammatic.current || !swipeRef.current) return
+    const c = swipeRef.current
+    const idx = Math.round(c.scrollLeft / c.clientWidth)
+    if (idx !== activeIdx) setActiveIdx(idx)
+  }, [activeIdx])
+
+  // ── Handle image upload — kick off all 5 redesigns ────────
   const handleImageSelected = useCallback((file) => {
     setImageFile(file)
-    setOriginalPreviewUrl(URL.createObjectURL(file))
-    setStep(STEP.STYLE)
+    const url = URL.createObjectURL(file)
+    setOriginalPreviewUrl(url)
+
+    const initial = REDESIGN_STYLES.map(s => ({ ...s, status: 'loading', result: null, error: null }))
+    setStyleResults(initial)
+    setActiveIdx(0)
+    setStep(STEP.RESULT)
+
+    // Fire all 5 requests in parallel — results appear as they finish
+    REDESIGN_STYLES.forEach((style, i) => {
+      redesignSpace(file, style.id)
+        .then(data => {
+          setStyleResults(prev => {
+            const next = [...prev]
+            next[i] = { ...next[i], status: 'done', result: data }
+            return next
+          })
+        })
+        .catch(err => {
+          console.error(`[SnapSpace] ${style.id} redesign failed:`, err)
+          setStyleResults(prev => {
+            const next = [...prev]
+            next[i] = { ...next[i], status: 'error', result: DEMO_RESULT, error: err.message }
+            return next
+          })
+        })
+    })
   }, [])
 
-  // ── Trigger AI redesign ────────────────────────────────────
-  const handleRedesign = async () => {
-    setError(null)
-    setStep(STEP.PROCESSING)
-    try {
-      const data = await redesignSpace(imageFile, selectedStyle)
-      setResult(data)
-    } catch (err) {
-      console.error('Redesign error:', err)
-      // Fall back to demo data so the UI is still usable
-      setResult(DEMO_RESULT)
-      setError(`AI service unavailable — showing a demo result. Make sure VITE_GEMINI_API_KEY is set in .env.local and the Gemini API is enabled on your project. (${err.message})`)
-    }
-    setStep(STEP.RESULT)
-  }
-
-  // ── Trigger area re-do ─────────────────────────────────────
+  // ── Area redo — replaces the active style's result ─────────
   const handleAreaSubmit = async (maskDataUrl, instruction) => {
-    setStep(STEP.PROCESSING)
+    const currentStyle = styleResults[activeIdx]?.id ?? 'Modern'
+
+    // Show loading in the active slot and go back to results view
+    setStyleResults(prev => {
+      const next = [...prev]
+      next[activeIdx] = { ...next[activeIdx], status: 'loading', result: null, error: null }
+      return next
+    })
+    setStep(STEP.RESULT)
+
     try {
-      const data = await redesignArea(imageFile, maskDataUrl, instruction, selectedStyle)
-      setResult(data)
+      const data = await redesignArea(imageFile, maskDataUrl, instruction, currentStyle)
+      setStyleResults(prev => {
+        const next = [...prev]
+        next[activeIdx] = { ...next[activeIdx], status: 'done', result: data }
+        return next
+      })
     } catch (err) {
       console.error('Area redesign error:', err)
-      setResult(DEMO_RESULT)
-      setError(`AI service unavailable — showing a demo result. (${err.message})`)
+      setStyleResults(prev => {
+        const next = [...prev]
+        next[activeIdx] = { ...next[activeIdx], status: 'error', result: DEMO_RESULT, error: err.message }
+        return next
+      })
     }
-    setStep(STEP.RESULT)
   }
 
   // ── Reset to start ─────────────────────────────────────────
@@ -150,9 +163,8 @@ export default function App() {
     setStep(STEP.UPLOAD)
     setImageFile(null)
     setOriginalPreviewUrl(null)
-    setResult(null)
-    setError(null)
-    setSelectedStyle('Modern')
+    setStyleResults([])
+    setActiveIdx(0)
   }
 
   // ── Auth guards ───────────────────────────────────────────
@@ -181,7 +193,7 @@ export default function App() {
       <main className="flex-1 flex flex-col">
         <AnimatePresence mode="wait">
 
-          {/* ── UPLOAD step ──────────────────────────────── */}
+          {/* ── UPLOAD ─────────────────────────────────────── */}
           {step === STEP.UPLOAD && (
             <motion.section
               key="upload"
@@ -195,139 +207,87 @@ export default function App() {
                   Transform any room<br />with AI
                 </h1>
                 <p className="mt-4 text-[15px] text-[#8888A4] leading-relaxed max-w-sm mx-auto">
-                  Upload a photo of your space. Get a photorealistic redesign with shoppable product links — in under a minute.
+                  Upload a photo and instantly see your space redesigned in 5 different styles — with shoppable product links.
                 </p>
               </div>
-
               <UploadZone onImageSelected={handleImageSelected} />
             </motion.section>
           )}
 
-          {/* ── STYLE step ───────────────────────────────── */}
-          {step === STEP.STYLE && (
-            <motion.section
-              key="style"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center gap-7 pt-10 pb-20 max-w-2xl mx-auto w-full px-5"
-            >
-              {/* Photo preview */}
-              <div className="w-full rounded-2xl overflow-hidden border border-white/[0.08]">
-                <img
-                  src={originalPreviewUrl}
-                  alt="Your space"
-                  className="w-full max-h-64 object-cover"
-                />
-              </div>
-
-              <StyleSelector selected={selectedStyle} onSelect={setSelectedStyle} />
-
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={handleRedesign}
-                className="btn-brand text-white font-semibold text-sm px-8 py-3 rounded-xl flex items-center gap-2 w-full max-w-xs justify-center"
-              >
-                <Wand2 size={16} />
-                Redesign My Space
-              </motion.button>
-
-              <button
-                onClick={handleReset}
-                className="text-sm text-[#484860] hover:text-[#8888A4] transition-colors"
-              >
-                ← Different photo
-              </button>
-            </motion.section>
-          )}
-
-          {/* ── PROCESSING step ─────────────────────────────────────────── */}
-          {step === STEP.PROCESSING && (
-            <motion.section
-              key="processing"
+          {/* ── RESULT — swipeable 5-style carousel ────────── */}
+          {step === STEP.RESULT && styleResults.length > 0 && (
+            <motion.div
+              key="result"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="max-w-lg mx-auto w-full px-5"
+              className="flex flex-col flex-1"
+              style={{ minHeight: 0 }}
             >
-              <LoadingState />
-            </motion.section>
-          )}
+              {/* ── Sticky style pills ─────────────────────── */}
+              <div className="sticky top-14 z-20 bg-[#07070D]/90 backdrop-blur-xl border-b border-white/[0.06]">
+                <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                  {styleResults.map((sr, i) => (
+                    <button
+                      key={sr.id}
+                      onClick={() => setActiveIdx(i)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 transition-all duration-150 ${
+                        i === activeIdx
+                          ? 'bg-[#7C3AED] text-white'
+                          : 'bg-[#0C0C16] border border-white/[0.08] text-[#8888A4] hover:border-white/[0.18] hover:text-white'
+                      }`}
+                    >
+                      {sr.status === 'loading' && (
+                        <span className="w-2.5 h-2.5 border border-current/50 border-t-current rounded-full animate-spin flex-shrink-0" />
+                      )}
+                      {sr.status === 'done' && (
+                        <span className="text-emerald-400 flex-shrink-0 leading-none">✓</span>
+                      )}
+                      {sr.status === 'error' && (
+                        <span className="text-amber-400 flex-shrink-0 leading-none">!</span>
+                      )}
+                      <span className="text-sm leading-none">{sr.emoji}</span>
+                      {sr.id}
+                    </button>
+                  ))}
 
-          {/* ── RESULT step ───────────────────────────────── */}
-          {step === STEP.RESULT && result && (
-            <motion.section
-              key="result"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col gap-8 pt-8 pb-20 max-w-4xl mx-auto w-full px-5"
-            >
-              {/* Error banner */}
-              {error && (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-300">
-                  ⚠️ {error}
+                  {/* New photo shortcut */}
+                  <button
+                    onClick={handleReset}
+                    className="ml-auto flex-shrink-0 text-xs text-[#484860] hover:text-[#8888A4] transition-colors pl-2 border-l border-white/[0.08] whitespace-nowrap"
+                  >
+                    ← New photo
+                  </button>
                 </div>
-              )}
-
-              {/* Comparison */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white">Your Redesign</h2>
-                  <span className="text-xs font-medium text-[#A78BFA] bg-[#7C3AED]/10 border border-[#7C3AED]/20 px-3 py-1 rounded-full">
-                    {selectedStyle}
-                  </span>
-                </div>
-                <ComparisonSlider
-                  originalSrc={originalPreviewUrl}
-                  redesignedSrc={result.redesignedImageUrl}
-                />
               </div>
 
-              {/* Design notes */}
-              {result.description && (
-                <div className="card p-5">
-                  <p className="text-xs font-medium text-[#484860] uppercase tracking-widest mb-2.5">Design Notes</p>
-                  <p className="text-sm text-[#8888A4] leading-relaxed">{result.description}</p>
-                </div>
-              )}
-
-              {/* Products */}
-              {result.products?.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-semibold text-white">Shop the Look</h3>
-                    <span className="text-xs text-[#484860]">{result.products.length} items</span>
+              {/* ── Swipeable panels ───────────────────────── */}
+              <div
+                ref={swipeRef}
+                onScroll={handleSwipeScroll}
+                className="flex-1 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar"
+                style={{ minHeight: 0 }}
+              >
+                {styleResults.map((sr, i) => (
+                  <div
+                    key={sr.id}
+                    className="snap-start flex-shrink-0 w-full h-full overflow-y-auto"
+                  >
+                    <div className="max-w-4xl mx-auto px-5 pt-8">
+                      <StyleResultCard
+                        styleResult={sr}
+                        originalSrc={originalPreviewUrl}
+                        onRedoArea={() => { setActiveIdx(i); setStep(STEP.AREA_SELECT) }}
+                        onReset={handleReset}
+                      />
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {result.products.map((product, i) => (
-                      <ProductCard key={`${product.name}-${i}`} product={product} index={i} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2.5 justify-center pt-2 pb-8">
-                <button
-                  onClick={() => setStep(STEP.AREA_SELECT)}
-                  className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
-                >
-                  <PaintbrushIcon size={14} className="text-[#A78BFA]" />
-                  Redo a specific area
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
-                >
-                  <RotateCcw size={14} />
-                  Try a different space
-                </button>
+                ))}
               </div>
-            </motion.section>
+            </motion.div>
           )}
 
-          {/* ── AREA SELECT step ─────────────────────────── */}
+          {/* ── AREA SELECT ────────────────────────────────── */}
           {step === STEP.AREA_SELECT && imageFile && (
             <motion.section
               key="area_select"
@@ -349,3 +309,5 @@ export default function App() {
     </div>
   )
 }
+
+
