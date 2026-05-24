@@ -12,7 +12,7 @@ export default defineConfig({
           'vendor-react':    ['react', 'react-dom'],
           'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/analytics', 'firebase/storage', 'firebase/functions'],
           'vendor-ui':       ['framer-motion', 'lucide-react', 'react-compare-slider'],
-          'vendor-gemini':   ['@google/generative-ai'],
+          'vendor-gemini':   ['@google/genai'],
         },
       },
     },

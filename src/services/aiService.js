@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 
 // ── Gemini client ──────────────────────────────────────────────
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
@@ -7,7 +7,7 @@ if (!GEMINI_API_KEY) {
   console.warn('[SnapSpace] VITE_GEMINI_API_KEY is not set — AI redesign will use demo data.')
 }
 
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null
+const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null
 
 // ── Helpers ────────────────────────────────────────────────────
 const fileToBase64 = (file) =>
@@ -50,6 +50,11 @@ ${extra}
 
 Return ONLY valid JSON (no markdown fences, no extra text):
 {
+  "roomType": "e.g. Living Room, Bedroom, Kitchen, Basement Bar, Home Office",
+  "estimatedSqFt": 250,
+  "roomDimensions": "approx 15ft × 17ft",
+  "ceilingHeight": "approx 9ft",
+  "floorPlanNotes": "open layout with 2 windows on north wall",
   "imagePrompt": "Hyper-realistic DSLR interior photograph. Same room: [describe the exact walls, windows, floor, ceiling from the photo]. Redesigned in ${style} style: [describe all new furniture, finishes, lighting, colors, and materials in exhaustive detail]. Same camera angle and perspective as the original photo. Photorealistic shadows and reflections. Shot on Canon EOS R5 with 24mm f/2.8 lens. No CGI look, no 3D render, no illustration style.",
   "description": "1-2 sentence plain-English summary of the redesign",
   "products": [
@@ -64,13 +69,9 @@ Return ONLY valid JSON (no markdown fences, no extra text):
 }
 `.trim()
 
-// ── Generate image via Gemini 2.0 Flash image generation ───────
-// Pass originalBase64 + mimeType to use image-to-image (keeps room structure)
+// ── Generate image via Gemini 2.5 Flash Image (image-to-image) ──────────────
+// Pass originalBase64 + mimeType to preserve the room's geometry
 async function generateImage(prompt, originalBase64, mimeType) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-preview-image-generation',
-  })
-
   const parts = []
   // Include the original photo so the model preserves room geometry
   if (originalBase64 && mimeType) {
@@ -78,14 +79,15 @@ async function generateImage(prompt, originalBase64, mimeType) {
   }
   parts.push({ text: prompt })
 
-  const result = await model.generateContent({
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-image',
     contents: [{ role: 'user', parts }],
-    generationConfig: {
+    config: {
       responseModalities: ['IMAGE', 'TEXT'],
     },
   })
 
-  const responseParts = result.response.candidates?.[0]?.content?.parts ?? []
+  const responseParts = response.candidates?.[0]?.content?.parts ?? []
   for (const part of responseParts) {
     if (part.inlineData?.data) {
       return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`
@@ -101,19 +103,21 @@ async function generateImage(prompt, originalBase64, mimeType) {
  * Returns { redesignedImageUrl, description, products }
  */
 export async function redesignSpace(imageFile, style = 'Modern') {
-  if (!genAI) throw new Error('VITE_GEMINI_API_KEY is not configured.')
+  if (!ai) throw new Error('VITE_GEMINI_API_KEY is not configured.')
 
   const base64   = await fileToBase64(imageFile)
   const mimeType = imageFile.type || 'image/jpeg'
 
   // Step 1 — Vision analysis: understand the room and build a generation prompt
-  const analysisModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-  const analysisResult = await analysisModel.generateContent([
-    { inlineData: { data: base64, mimeType } },
-    { text: ANALYSIS_PROMPT(style) },
-  ])
+  const analysisResponse = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-preview-05-20',
+    contents: [{ role: 'user', parts: [
+      { inlineData: { data: base64, mimeType } },
+      { text: ANALYSIS_PROMPT(style) },
+    ]}],
+  })
 
-  const raw    = analysisResult.response.text().trim()
+  const raw    = analysisResponse.text.trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
   const parsed = JSON.parse(raw)
   const {
@@ -154,7 +158,7 @@ export async function redesignSpace(imageFile, style = 'Modern') {
  * Returns { redesignedImageUrl, description, products }
  */
 export async function redesignArea(originalImageFile, maskDataUrl, instruction, style = 'Modern') {
-  if (!genAI) throw new Error('VITE_GEMINI_API_KEY is not configured.')
+  if (!ai) throw new Error('VITE_GEMINI_API_KEY is not configured.')
 
   const base64   = await fileToBase64(originalImageFile)
   const mimeType = originalImageFile.type || 'image/jpeg'
@@ -164,13 +168,15 @@ export async function redesignArea(originalImageFile, maskDataUrl, instruction, 
     : '- The user painted over a specific area. Redesign that area to match the overall style; keep the rest identical.'
 
   // Step 1 — Analyze original image + area instruction
-  const analysisModel  = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-  const analysisResult = await analysisModel.generateContent([
-    { inlineData: { data: base64, mimeType } },
-    { text: ANALYSIS_PROMPT(style, extra) },
-  ])
+  const analysisResponse = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-preview-05-20',
+    contents: [{ role: 'user', parts: [
+      { inlineData: { data: base64, mimeType } },
+      { text: ANALYSIS_PROMPT(style, extra) },
+    ]}],
+  })
 
-  const raw    = analysisResult.response.text().trim()
+  const raw    = analysisResponse.text.trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
   const parsed = JSON.parse(raw)
   const {
@@ -210,7 +216,7 @@ export async function redesignArea(originalImageFile, maskDataUrl, instruction, 
  * Returns { redesignedImageUrl, description, products }
  */
 export async function chatRedesign(imageFile, style, chatHistory, newMessage) {
-  if (!genAI) throw new Error('VITE_GEMINI_API_KEY is not configured.')
+  if (!ai) throw new Error('VITE_GEMINI_API_KEY is not configured.')
 
   const base64   = await fileToBase64(imageFile)
   const mimeType = imageFile.type || 'image/jpeg'
@@ -245,13 +251,15 @@ Return ONLY valid JSON (no markdown fences):
 }
 `.trim()
 
-  const analysisModel  = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-  const analysisResult = await analysisModel.generateContent([
-    { inlineData: { data: base64, mimeType } },
-    { text: prompt },
-  ])
+  const analysisResponse = await ai.models.generateContent({
+    model: 'gemini-2.5-flash-preview-05-20',
+    contents: [{ role: 'user', parts: [
+      { inlineData: { data: base64, mimeType } },
+      { text: prompt },
+    ]}],
+  })
 
-  const raw    = analysisResult.response.text().trim()
+  const raw    = analysisResponse.text.trim()
     .replace(/^```json\s*/i, '').replace(/```\s*$/, '')
   const parsed = JSON.parse(raw)
   const { imagePrompt, description, products = [] } = parsed
