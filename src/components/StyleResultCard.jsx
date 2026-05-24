@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { PaintbrushIcon, RotateCcw, Ruler, Home, Info } from 'lucide-react'
+import { PaintbrushIcon, RotateCcw, Ruler, Home, Info, ChevronLeft, ChevronRight } from 'lucide-react'
 import ComparisonSlider from './ComparisonSlider.jsx'
 import ProductCard from './ProductCard.jsx'
 import ChatBar from './ChatBar.jsx'
@@ -82,11 +82,15 @@ function RoomSpecs({ roomType, estimatedSqFt, roomDimensions, ceilingHeight, flo
 }
 
 // ── Main card ───────────────────────────────────────────────────
-export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, onReset, onChat }) {
-  const { id: style, emoji, status, result, error, chatHistory = [], chatLoading = false } = styleResult
+export default function StyleResultCard({ styleResult, originalSrc, currentImageUrl, onRedoArea, onReset, onChat, onHistoryBack, onHistoryForward }) {
+  const { id: style, emoji, status, result, error, chatHistory = [], chatLoading = false, imageHistory = [], historyIdx = -1 } = styleResult
 
   if (status === 'loading') return <LoadingPanel style={style} emoji={emoji} />
   if (status === 'error')   return <ErrorPanel error={error} />
+
+  const displayedImage = currentImageUrl ?? result.redesignedImageUrl
+  const canGoBack      = historyIdx > 0
+  const canGoForward   = historyIdx < imageHistory.length - 1
 
   return (
     <motion.div
@@ -105,9 +109,57 @@ export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, 
       {/* Comparison slider */}
       <ComparisonSlider
         originalSrc={originalSrc}
-        redesignedSrc={result.redesignedImageUrl}
+        redesignedSrc={displayedImage}
         alt={style}
       />
+
+      {/* Image history navigation */}
+      {imageHistory.length > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={onHistoryBack}
+            disabled={!canGoBack}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[#0C0C16] border border-white/[0.08] text-[#8888A4] hover:border-white/[0.2] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronLeft size={13} /> Back
+          </button>
+          <span className="text-xs text-[#484860] tabular-nums">
+            Version {historyIdx + 1} <span className="text-[#2E2E48]">/</span> {imageHistory.length}
+          </span>
+          <button
+            onClick={onHistoryForward}
+            disabled={!canGoForward}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[#0C0C16] border border-white/[0.08] text-[#8888A4] hover:border-white/[0.2] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            Forward <ChevronRight size={13} />
+          </button>
+        </div>
+      )}
+
+      {/* AI chat bar — sits right below the image */}
+      <ChatBar
+        chatHistory={chatHistory}
+        onSend={onChat}
+        isLoading={chatLoading}
+      />
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2.5 justify-center">
+        <button
+          onClick={onRedoArea}
+          className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
+        >
+          <PaintbrushIcon size={14} className="text-[#A78BFA]" />
+          Redo a specific area
+        </button>
+        <button
+          onClick={onReset}
+          className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
+        >
+          <RotateCcw size={14} />
+          New photo
+        </button>
+      </div>
 
       {/* Room specs */}
       {(result.roomType || result.estimatedSqFt || result.roomDimensions) && (
@@ -144,31 +196,6 @@ export default function StyleResultCard({ styleResult, originalSrc, onRedoArea, 
           </div>
         </div>
       )}
-
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2.5 justify-center pt-2">
-        <button
-          onClick={onRedoArea}
-          className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
-        >
-          <PaintbrushIcon size={14} className="text-[#A78BFA]" />
-          Redo a specific area
-        </button>
-        <button
-          onClick={onReset}
-          className="card card-hover flex items-center gap-2 px-5 py-2.5 text-sm text-[#8888A4] hover:text-white transition-colors cursor-pointer"
-        >
-          <RotateCcw size={14} />
-          New photo
-        </button>
-      </div>
-
-      {/* AI chat bar */}
-      <ChatBar
-        chatHistory={chatHistory}
-        onSend={onChat}
-        isLoading={chatLoading}
-      />
 
       {/* bottom spacer */}
       <div className="pb-6" />

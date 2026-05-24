@@ -18,6 +18,18 @@ const fileToBase64 = (file) =>
     reader.readAsDataURL(file)
   })
 
+/** Accept either a File or a base64 data URL string; return { base64, mimeType } */
+async function resolveImageSource(source) {
+  if (typeof source === 'string') {
+    const [header, data] = source.split(',')
+    const mimeType = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg'
+    return { base64: data, mimeType }
+  }
+  const base64 = await fileToBase64(source)
+  const mimeType = source.type || 'image/jpeg'
+  return { base64, mimeType }
+}
+
 function buildSearchUrl(store, productName) {
   const q = encodeURIComponent(productName)
   const map = {
@@ -157,11 +169,11 @@ export async function redesignSpace(imageFile, style = 'Modern') {
  * maskDataUrl is a canvas PNG with violet paint over the area to change.
  * Returns { redesignedImageUrl, description, products }
  */
-export async function redesignArea(originalImageFile, maskDataUrl, instruction, style = 'Modern') {
+// sourceImage can be a File (original upload) OR a base64 data URL string (previously generated image)
+export async function redesignArea(sourceImage, maskDataUrl, instruction, style = 'Modern') {
   if (!ai) throw new Error('VITE_GEMINI_API_KEY is not configured.')
 
-  const base64   = await fileToBase64(originalImageFile)
-  const mimeType = originalImageFile.type || 'image/jpeg'
+  const { base64, mimeType } = await resolveImageSource(sourceImage)
 
   const extra = instruction
     ? `- The user painted over a specific area and wants: "${instruction}". Change ONLY that area; keep the rest identical.`

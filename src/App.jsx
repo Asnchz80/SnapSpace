@@ -109,6 +109,8 @@ export default function App() {
       error: null,
       chatHistory: [],
       chatLoading: false,
+      imageHistory: [],
+      historyIdx: -1,
     }))
     setStyleResults(initial)
     setActiveIdx(0)
@@ -120,7 +122,8 @@ export default function App() {
         .then(data => {
           setStyleResults(prev => {
             const next = [...prev]
-            next[i] = { ...next[i], status: 'done', result: data }
+            const newHistory = [...(next[i].imageHistory ?? []), data.redesignedImageUrl]
+            next[i] = { ...next[i], status: 'done', result: data, imageHistory: newHistory, historyIdx: newHistory.length - 1 }
             return next
           })
         })
@@ -128,7 +131,8 @@ export default function App() {
           console.error(`[SnapSpace] ${style.id} redesign failed:`, err)
           setStyleResults(prev => {
             const next = [...prev]
-            next[i] = { ...next[i], status: 'error', result: DEMO_RESULT, error: err.message }
+            const newHistory = [...(next[i].imageHistory ?? []), DEMO_RESULT.redesignedImageUrl]
+            next[i] = { ...next[i], status: 'error', result: DEMO_RESULT, error: err.message, imageHistory: newHistory, historyIdx: newHistory.length - 1 }
             return next
           })
         })
@@ -159,18 +163,22 @@ export default function App() {
       const data = await chatRedesign(imageFile, styleName, userMessages, message)
       setStyleResults(prev => {
         const next = [...prev]
+        const slot = next[styleIdx]
+        const newHistory = [...(slot.imageHistory ?? []), data.redesignedImageUrl]
         next[styleIdx] = {
-          ...next[styleIdx],
+          ...slot,
           chatLoading: false,
           status: 'done',
           result: {
-            ...next[styleIdx].result,
+            ...slot.result,
             redesignedImageUrl: data.redesignedImageUrl,
             description: data.description,
             products: data.products,
           },
+          imageHistory: newHistory,
+          historyIdx: newHistory.length - 1,
           chatHistory: [
-            ...next[styleIdx].chatHistory,
+            ...slot.chatHistory,
             { role: 'assistant', content: data.description },
           ],
         }
@@ -193,9 +201,15 @@ export default function App() {
     }
   }, [imageFile, styleResults])
 
-  // ── Area redo — replaces the active style's result ─────────
+  // ── Area redo — builds on the currently displayed generated image ──
   const handleAreaSubmit = async (maskDataUrl, instruction) => {
-    const currentStyle = styleResults[activeIdx]?.id ?? 'Modern'
+    const slot = styleResults[activeIdx]
+    const currentStyle = slot?.id ?? 'Modern'
+    // Use the currently displayed generated image as the source (not the raw upload)
+    const sourceImage =
+      (slot?.imageHistory?.length > 0 && slot.historyIdx >= 0)
+        ? slot.imageHistory[slot.historyIdx]
+        : imageFile
 
     // Show loading in the active slot and go back to results view
     setStyleResults(prev => {
@@ -206,21 +220,36 @@ export default function App() {
     setStep(STEP.RESULT)
 
     try {
-      const data = await redesignArea(imageFile, maskDataUrl, instruction, currentStyle)
+      const data = await redesignArea(sourceImage, maskDataUrl, instruction, currentStyle)
       setStyleResults(prev => {
         const next = [...prev]
-        next[activeIdx] = { ...next[activeIdx], status: 'done', result: data }
+        const s = next[activeIdx]
+        const newHistory = [...(s.imageHistory ?? []), data.redesignedImageUrl]
+        next[activeIdx] = { ...s, status: 'done', result: data, imageHistory: newHistory, historyIdx: newHistory.length - 1 }
         return next
       })
     } catch (err) {
       console.error('Area redesign error:', err)
       setStyleResults(prev => {
         const next = [...prev]
-        next[activeIdx] = { ...next[activeIdx], status: 'error', result: DEMO_RESULT, error: err.message }
+        const s = next[activeIdx]
+        const newHistory = [...(s.imageHistory ?? []), DEMO_RESULT.redesignedImageUrl]
+        next[activeIdx] = { ...s, status: 'error', result: DEMO_RESULT, error: err.message, imageHistory: newHistory, historyIdx: newHistory.length - 1 }
         return next
       })
     }
   }
+
+  // ── History navigation ─────────────────────────────────────
+  const handleHistoryNav = useCallback((styleIdx, direction) => {
+    setStyleResults(prev => {
+      const next = [...prev]
+      const s = next[styleIdx]
+      const newIdx = Math.max(0, Math.min(s.imageHistory.length - 1, s.historyIdx + direction))
+      next[styleIdx] = { ...s, historyIdx: newIdx }
+      return next
+    })
+  }, [])
 
   // ── Reset to start ─────────────────────────────────────────
   const handleReset = () => {
@@ -342,9 +371,12 @@ export default function App() {
                       <StyleResultCard
                         styleResult={sr}
                         originalSrc={originalPreviewUrl}
+                        currentImageUrl={sr.imageHistory?.[sr.historyIdx] ?? sr.result?.redesignedImageUrl}
                         onRedoArea={() => { setActiveIdx(i); setStep(STEP.AREA_SELECT) }}
                         onReset={handleReset}
                         onChat={(msg) => handleChat(i, msg, sr.chatHistory ?? [])}
+                        onHistoryBack={() => handleHistoryNav(i, -1)}
+                        onHistoryForward={() => handleHistoryNav(i, 1)}
                       />
                     </div>
                   </div>
@@ -363,6 +395,7 @@ export default function App() {
               className="max-w-3xl mx-auto w-full pt-8 pb-20 px-5"
             >
               <AreaSelector
+                imageSrc={styleResults[activeIdx]?.imageHistory?.[styleResults[activeIdx]?.historyIdx]}
                 imageFile={imageFile}
                 onSubmit={handleAreaSubmit}
                 onCancel={() => setStep(STEP.RESULT)}

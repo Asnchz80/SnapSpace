@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Brush, Eraser, RotateCcw, Wand2 } from 'lucide-react'
 
-export default function AreaSelector({ imageFile, onSubmit, onCancel }) {
+export default function AreaSelector({ imageSrc, imageFile, onSubmit, onCancel }) {
   const canvasRef = useRef(null)
   const imgRef = useRef(null)
   const [tool, setTool] = useState('brush')   // 'brush' | 'eraser'
@@ -11,10 +11,13 @@ export default function AreaSelector({ imageFile, onSubmit, onCancel }) {
   const [isDrawing, setIsDrawing] = useState(false)
   const [imgDims, setImgDims] = useState({ w: 0, h: 0 })
 
-  // Load image and size the canvas
+  // Load image — prefer the generated imageSrc URL, fall back to the raw upload
   useEffect(() => {
+    let blobUrl = null
+    const src = imageSrc ?? (() => { blobUrl = URL.createObjectURL(imageFile); return blobUrl })()
+
     const img = new Image()
-    img.src = URL.createObjectURL(imageFile)
+    img.src = src
     img.onload = () => {
       imgRef.current = img
       const maxW = Math.min(img.naturalWidth, 800)
@@ -23,8 +26,8 @@ export default function AreaSelector({ imageFile, onSubmit, onCancel }) {
       const h = img.naturalHeight * scale
       setImgDims({ w, h })
     }
-    return () => URL.revokeObjectURL(img.src)
-  }, [imageFile])
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl) }
+  }, [imageSrc, imageFile])
 
   useEffect(() => {
     if (!imgDims.w || !canvasRef.current) return
