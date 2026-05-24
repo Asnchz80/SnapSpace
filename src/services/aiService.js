@@ -110,7 +110,7 @@ export async function redesignSpace(imageFile, style = 'Modern') {
 
   // Step 1 — Vision analysis: understand the room and build a generation prompt
   const analysisResponse = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-preview-05-20',
+    model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { inlineData: { data: base64, mimeType } },
       { text: ANALYSIS_PROMPT(style) },
@@ -169,7 +169,7 @@ export async function redesignArea(originalImageFile, maskDataUrl, instruction, 
 
   // Step 1 — Analyze original image + area instruction
   const analysisResponse = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-preview-05-20',
+    model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { inlineData: { data: base64, mimeType } },
       { text: ANALYSIS_PROMPT(style, extra) },
@@ -252,7 +252,7 @@ Return ONLY valid JSON (no markdown fences):
 `.trim()
 
   const analysisResponse = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-preview-05-20',
+    model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { inlineData: { data: base64, mimeType } },
       { text: prompt },
