@@ -1,0 +1,49 @@
+name: Deploy to Firebase on merge
+
+on:
+  push:
+    branches:
+      - main
+
+# Minimal permissions — only what GitHub Actions itself needs
+permissions:
+  contents: read
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # VITE_GEMINI_API_KEY is read from GitHub Secrets at build time.
+      # It gets baked into the JS bundle — restrict this key to your
+      # domain in Google AI Studio to limit misuse.
+      - name: Build (inject Gemini key from GitHub Secret)
+        env:
+          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+        run: npm run build
+
+      # Deploy: Hosting (dist/) + Realtime Database rules + Storage rules.
+      # The service account JSON is written to a temp file, used, then
+      # immediately deleted — it never persists in the runner environment.
+      - name: Deploy Hosting + Database + Storage Rules to Firebase
+        env:
+          FIREBASE_SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SNAPSPACE_4D243 }}
+        run: |
+          printf '%s' "$FIREBASE_SA_JSON" > /tmp/sa.json
+          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json \
+            npx --yes firebase-tools@latest deploy \
+              --only hosting,database,storage \
+              --project snapspace-4d243 \
+              --non-interactive
+          rm -f /tmp/sa.json

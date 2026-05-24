@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // SnapSpace calls Gemini directly from the browser.
+    // Firebase Storage is not actively used — deny all by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
