@@ -9,8 +9,8 @@
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
-  background: #07070D;
-  color: #EDEDF5;
+  background: #F5F5FA;
+  color: #0D0D1A;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -20,11 +20,11 @@ body {
 /* ── Scrollbar ───────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1E1E35; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #D0D0E4; border-radius: 2px; }
 
 /* ── Text gradient ───────────────────────────────────── */
 .text-gradient {
-  background: linear-gradient(130deg, #A78BFA 0%, #60A5FA 100%);
+  background: linear-gradient(130deg, #7C3AED 0%, #6366F1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -32,12 +32,14 @@ body {
 
 /* ── Card surface ────────────────────────────────────── */
 .card {
-  background: #0C0C16;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.03);
 }
 .card-hover:hover {
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(0, 0, 0, 0.13);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.05);
 }
 
 /* ── Brand button ────────────────────────────────────── */
@@ -50,7 +52,7 @@ body {
 
 /* ── Skeleton shimmer ────────────────────────────────── */
 .skeleton {
-  background: linear-gradient(90deg, #111120 25%, #181830 50%, #111120 75%);
+  background: linear-gradient(90deg, #EFEFF5 25%, #E5E5EF 50%, #EFEFF5 75%);
   background-size: 200% 100%;
   animation: shimmer 1.8s linear infinite;
 }
@@ -65,11 +67,11 @@ body {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ── Compare slider ──────────────────────────────────── */
-[data-rcs="root"] { border-radius: 12px; overflow: hidden; }
+[data-rcs="root"] { border-radius: 14px; overflow: hidden; }
 [data-rcs="handle-container"] button {
   background: #7C3AED !important;
   border: 2px solid white !important;
   width: 40px !important;
   height: 40px !important;
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.45) !important;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.35) !important;
 }

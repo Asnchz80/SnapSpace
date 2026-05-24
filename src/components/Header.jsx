@@ -15,14 +15,14 @@ export default function Header({ user, onSignOut }) {
   }, [])
 
   return (
-    <header className="sticky top-0 z-30 bg-[#07070D]/80 backdrop-blur-xl border-b border-white/[0.06]">
+    <header className="sticky top-0 z-30 bg-[#F5F5FA]/90 backdrop-blur-xl border-b border-black/[0.07]">
       <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-[#7C3AED] flex items-center justify-center flex-shrink-0">
             <Sparkles size={14} className="text-white" />
           </div>
-          <span className="text-[15px] font-semibold tracking-tight text-white">
+          <span className="text-[15px] font-semibold tracking-tight text-[#0D0D1A]">
             Snap<span className="text-gradient">Space</span>
           </span>
         </div>
@@ -32,7 +32,7 @@ export default function Header({ user, onSignOut }) {
           <div ref={menuRef} className="relative">
             <button
               onClick={() => setOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 hover:bg-white/[0.04] transition-colors"
+              className="flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 hover:bg-black/[0.04] transition-colors"
             >
               {user.photoURL ? (
                 <img
@@ -46,12 +46,12 @@ export default function Header({ user, onSignOut }) {
                   {(user.displayName ?? user.email ?? 'U')[0].toUpperCase()}
                 </div>
               )}
-              <span className="hidden sm:block text-sm text-[#8888A4] max-w-[120px] truncate">
+              <span className="hidden sm:block text-sm text-[#6B6B8A] max-w-[120px] truncate">
                 {user.displayName?.split(' ')[0] ?? user.email}
               </span>
               <ChevronDown
                 size={13}
-                className={`text-[#484860] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                className={`text-[#9B9BB8] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
               />
             </button>
 
@@ -62,17 +62,17 @@ export default function Header({ user, onSignOut }) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.97 }}
                   transition={{ duration: 0.13, ease: 'easeOut' }}
-                  className="absolute right-0 mt-2 w-52 card p-1.5 shadow-2xl shadow-black/70"
+                  className="absolute right-0 mt-2 w-52 card p-1.5 shadow-lg shadow-black/[0.08]"
                 >
-                  <div className="px-3 py-2.5 mb-1 border-b border-white/[0.06]">
-                    <p className="text-sm font-medium text-white truncate">
+                  <div className="px-3 py-2.5 mb-1 border-b border-black/[0.07]">
+                    <p className="text-sm font-medium text-[#0D0D1A] truncate">
                       {user.displayName ?? 'User'}
                     </p>
-                    <p className="text-xs text-[#484860] mt-0.5 truncate">{user.email}</p>
+                    <p className="text-xs text-[#9B9BB8] mt-0.5 truncate">{user.email}</p>
                   </div>
                   <button
                     onClick={() => { setOpen(false); onSignOut() }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-[#8888A4] hover:text-red-400 hover:bg-red-500/10 transition-all text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-[#6B6B8A] hover:text-red-500 hover:bg-red-50 transition-all text-left"
                   >
                     <LogOut size={14} />
                     Sign out

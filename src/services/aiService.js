@@ -76,6 +76,7 @@ Return ONLY valid JSON (no markdown fences, no extra text):
       "category": "Furniture|Lighting|Textiles|Decor|Storage|Appliances",
       "priceRange": "$XX–$XX",
       "store": "store name from the allowed list",
+      "imageSearchQuery": "2-5 word visual search query for this exact product type, e.g. 'walnut mid-century credenza' or 'arc brushed gold floor lamp'",
       "reason": "one sentence on why this fits the redesign"
     }
   ]

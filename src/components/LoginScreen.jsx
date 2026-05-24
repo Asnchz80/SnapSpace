@@ -44,11 +44,11 @@ export default function LoginScreen() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#07070D] flex">
+    <div className="min-h-dvh bg-[#F5F5FA] flex">
       {/* ── Left panel ─────────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-14 border-r border-white/[0.06] relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-14 border-r border-black/[0.07] relative overflow-hidden bg-white">
         {/* Subtle bg tint */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/20 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-transparent to-transparent pointer-events-none" />
 
         {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
@@ -65,18 +65,18 @@ export default function LoginScreen() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 max-w-md"
         >
-          <h1 className="text-5xl font-bold text-white leading-[1.1] tracking-[-0.03em]">
+          <h1 className="text-5xl font-bold text-[#0D0D1A] leading-[1.1] tracking-[-0.03em]">
             Your space,<br />redesigned<br />by AI.
           </h1>
-          <p className="mt-5 text-[17px] text-[#8888A4] leading-relaxed">
+          <p className="mt-5 text-[17px] text-[#6B6B8A] leading-relaxed">
             Upload a photo of any room. Get a photorealistic redesign with real,
             shoppable product links — in under a minute.
           </p>
           <ul className="mt-9 space-y-3.5">
             {FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-3 text-sm text-[#8888A4]">
-                <div className="w-5 h-5 rounded-full bg-[#7C3AED]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check size={11} className="text-[#A78BFA]" />
+              <li key={f} className="flex items-start gap-3 text-sm text-[#6B6B8A]">
+                <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check size={11} className="text-[#7C3AED]" />
                 </div>
                 {f}
               </li>
@@ -85,7 +85,7 @@ export default function LoginScreen() {
         </motion.div>
 
         {/* Footer */}
-        <p className="text-sm text-[#484860] relative z-10">
+        <p className="text-sm text-[#9B9BB8] relative z-10">
           Free to use · No credit card required
         </p>
       </div>
@@ -103,11 +103,11 @@ export default function LoginScreen() {
             <div className="w-9 h-9 rounded-xl bg-[#7C3AED] flex items-center justify-center">
               <Sparkles size={17} className="text-white" />
             </div>
-            <span className="text-xl font-semibold tracking-tight text-white">SnapSpace</span>
+            <span className="text-xl font-semibold tracking-tight text-[#0D0D1A]">SnapSpace</span>
           </div>
 
-          <h2 className="text-2xl font-semibold text-white tracking-tight">Sign in</h2>
-          <p className="mt-1.5 text-sm text-[#8888A4]">Continue to SnapSpace — it's free</p>
+          <h2 className="text-2xl font-semibold text-[#0D0D1A] tracking-tight">Sign in</h2>
+          <p className="mt-1.5 text-sm text-[#6B6B8A]">Continue to SnapSpace — it's free</p>
 
           <div className="mt-8">
             <button
@@ -137,16 +137,16 @@ export default function LoginScreen() {
           {/* Mobile features */}
           <ul className="lg:hidden mt-10 space-y-3">
             {FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-3 text-sm text-[#8888A4]">
-                <div className="w-5 h-5 rounded-full bg-[#7C3AED]/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check size={11} className="text-[#A78BFA]" />
+              <li key={f} className="flex items-start gap-3 text-sm text-[#6B6B8A]">
+                <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check size={11} className="text-[#7C3AED]" />
                 </div>
                 {f}
               </li>
             ))}
           </ul>
 
-          <p className="mt-10 text-xs text-[#484860] text-center leading-relaxed">
+          <p className="mt-10 text-xs text-[#9B9BB8] text-center leading-relaxed">
             By signing in you agree to our Terms of Service.<br />
             We never post or share your data.
           </p>

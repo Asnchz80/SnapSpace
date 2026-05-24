@@ -276,9 +276,9 @@ export default function App() {
   // ── Auth guards ───────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#07070D]">
+      <div className="min-h-dvh flex items-center justify-center bg-[#F5F5FA]">
         <div className="relative w-10 h-10">
-          <div className="absolute inset-0 rounded-full border-2 border-white/[0.06]" />
+          <div className="absolute inset-0 rounded-full border-2 border-black/[0.06]" />
           <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#7C3AED] animate-spin" />
         </div>
       </div>
@@ -291,7 +291,7 @@ export default function App() {
     <div className="min-h-dvh flex flex-col">
       {/* Subtle top radial glow */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-b from-violet-950/15 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-b from-violet-100/60 to-transparent" />
       </div>
 
       <Header user={user} onSignOut={handleSignOut} />
@@ -309,10 +309,10 @@ export default function App() {
               className="flex flex-col items-center gap-10 pt-10 pb-20 max-w-2xl mx-auto w-full px-5"
             >
               <div className="text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-[3rem] font-bold text-white leading-[1.1] tracking-[-0.03em]">
+                <h1 className="text-3xl sm:text-4xl md:text-[3rem] font-bold text-[#0D0D1A] leading-[1.1] tracking-[-0.03em]">
                   Transform any room<br />with AI
                 </h1>
-                <p className="mt-4 text-[15px] text-[#8888A4] leading-relaxed max-w-sm mx-auto">
+                <p className="mt-4 text-[15px] text-[#6B6B8A] leading-relaxed max-w-sm mx-auto">
                   Upload a photo and instantly see your space redesigned in 5 different styles — with shoppable product links.
                 </p>
               </div>
@@ -330,7 +330,7 @@ export default function App() {
               className="flex flex-col items-center gap-6 pt-10 pb-20 max-w-xl mx-auto w-full px-5"
             >
               {/* Photo thumbnail */}
-              <div className="w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-xl">
+              <div className="w-full rounded-2xl overflow-hidden border border-black/[0.08] shadow-sm">
                 <img
                   src={originalPreviewUrl}
                   alt="Your space"
@@ -340,17 +340,17 @@ export default function App() {
 
               {/* Description input */}
               <div className="w-full flex flex-col gap-2">
-                <label className="text-xs font-medium text-[#484860] uppercase tracking-widest">
-                  Describe what you want&nbsp;<span className="normal-case text-[#2E2E48]">— optional</span>
+                <label className="text-xs font-medium text-[#9B9BB8] uppercase tracking-widest">
+                  Describe what you want&nbsp;<span className="normal-case text-[#BEBEDE]">— optional</span>
                 </label>
                 <textarea
                   value={pendingDescription}
                   onChange={(e) => setPendingDescription(e.target.value)}
                   placeholder={'e.g. "keep the exposed brick wall, add a reading nook by the window, brighter lighting"'}
                   rows={3}
-                  className="w-full rounded-xl bg-[#0C0C16] border border-white/[0.08] px-4 py-3 text-sm text-white placeholder-[#484860] resize-none focus:outline-none focus:border-[#7C3AED]/60 transition-colors"
+                  className="w-full rounded-xl bg-white border border-black/[0.08] px-4 py-3 text-sm text-[#0D0D1A] placeholder-[#9B9BB8] resize-none focus:outline-none focus:border-[#7C3AED]/60 transition-colors"
                 />
-                <p className="text-xs text-[#484860]">
+                <p className="text-xs text-[#9B9BB8]">
                   The AI will honor your notes across all 5 styles.
                 </p>
               </div>
@@ -365,7 +365,7 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => { setStep(STEP.UPLOAD); setImageFile(null); if (originalPreviewUrl) URL.revokeObjectURL(originalPreviewUrl); setOriginalPreviewUrl(null) }}
-                  className="w-full h-10 rounded-xl border border-white/[0.08] text-sm text-[#8888A4] hover:text-white hover:border-white/[0.16] transition-colors"
+                  className="w-full h-10 rounded-xl border border-black/[0.08] text-sm text-[#6B6B8A] hover:text-[#0D0D1A] hover:border-black/[0.16] transition-colors"
                 >
                   ← Change photo
                 </button>
@@ -384,7 +384,7 @@ export default function App() {
               style={{ minHeight: 0 }}
             >
               {/* ── Sticky style pills ─────────────────────── */}
-              <div className="sticky top-14 z-20 bg-[#07070D]/90 backdrop-blur-xl border-b border-white/[0.06]">
+              <div className="sticky top-14 z-20 bg-[#F5F5FA]/90 backdrop-blur-xl border-b border-black/[0.07]">
                 <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
                   {styleResults.map((sr, i) => (
                     <button
@@ -393,17 +393,17 @@ export default function App() {
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 transition-all duration-150 ${
                         i === activeIdx
                           ? 'bg-[#7C3AED] text-white'
-                          : 'bg-[#0C0C16] border border-white/[0.08] text-[#8888A4] hover:border-white/[0.18] hover:text-white'
+                          : 'bg-white border border-black/[0.08] text-[#6B6B8A] hover:border-black/[0.16] hover:text-[#0D0D1A]'
                       }`}
                     >
                       {sr.status === 'loading' && (
                         <span className="w-2.5 h-2.5 border border-current/50 border-t-current rounded-full animate-spin flex-shrink-0" />
                       )}
                       {sr.status === 'done' && (
-                        <span className="text-emerald-400 flex-shrink-0 leading-none">✓</span>
+                        <span className="text-emerald-500 flex-shrink-0 leading-none">✓</span>
                       )}
                       {sr.status === 'error' && (
-                        <span className="text-amber-400 flex-shrink-0 leading-none">!</span>
+                        <span className="text-amber-500 flex-shrink-0 leading-none">!</span>
                       )}
                       <span className="text-sm leading-none">{sr.emoji}</span>
                       {sr.id}
@@ -413,7 +413,7 @@ export default function App() {
                   {/* New photo shortcut */}
                   <button
                     onClick={handleReset}
-                    className="ml-auto flex-shrink-0 text-xs text-[#484860] hover:text-[#8888A4] transition-colors pl-2 border-l border-white/[0.08] whitespace-nowrap"
+                    className="ml-auto flex-shrink-0 text-xs text-[#9B9BB8] hover:text-[#6B6B8A] transition-colors pl-2 border-l border-black/[0.08] whitespace-nowrap"
                   >
                     ← New photo
                   </button>

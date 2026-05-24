@@ -63,16 +63,16 @@ export default function UploadZone({ onImageSelected }) {
         </AnimatePresence>
 
         <div className="text-center">
-          <p className="text-base font-medium text-white">
+          <p className="text-base font-medium text-[#0D0D1A]">
             {isDragging ? 'Drop to upload' : 'Upload a photo of your space'}
           </p>
-          <p className="text-sm text-[#8888A4] mt-1">
+          <p className="text-sm text-[#6B6B8A] mt-1">
             Drag &amp; drop, or{' '}
-            <span className="text-[#A78BFA] group-hover:text-violet-300 transition-colors">
+            <span className="text-[#7C3AED] group-hover:text-violet-600 transition-colors">
               click to browse
             </span>
           </p>
-          <p className="text-xs text-[#484860] mt-3">JPG · PNG · HEIC — up to 20 MB</p>
+          <p className="text-xs text-[#9B9BB8] mt-3">JPG · PNG · HEIC — up to 20 MB</p>
         </div>
 
         <input
@@ -86,7 +86,7 @@ export default function UploadZone({ onImageSelected }) {
 
       <button
         onClick={handleCapture}
-        className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-white/[0.08] text-sm text-[#8888A4] hover:text-white hover:border-white/[0.16] transition-colors"
+        className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-black/[0.08] text-sm text-[#6B6B8A] hover:text-[#0D0D1A] hover:border-black/[0.14] transition-colors"
       >
         <Camera size={14} />
         Use camera

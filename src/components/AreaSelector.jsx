@@ -82,8 +82,8 @@ export default function AreaSelector({ imageSrc, imageFile, onSubmit, onCancel }
       className="flex flex-col gap-5"
     >
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-white">Select the area to redesign</h3>
-        <p className="text-sm text-[#8888A4] mt-1">
+        <h3 className="text-lg font-semibold text-[#0D0D1A]">Select the area to redesign</h3>
+        <p className="text-sm text-[#6B6B8A] mt-1">
           Paint over the area you want changed. The rest stays the same.
         </p>
       </div>
@@ -140,7 +140,7 @@ export default function AreaSelector({ imageSrc, imageFile, onSubmit, onCancel }
           ))}
           <button
             onClick={clearCanvas}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-[#8888A4] hover:text-white hover:bg-white/[0.05] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-[#6B6B8A] hover:text-[#0D0D1A] hover:bg-black/[0.05] transition-colors"
           >
             <RotateCcw size={14} />
             Clear
@@ -149,7 +149,7 @@ export default function AreaSelector({ imageSrc, imageFile, onSubmit, onCancel }
 
         {/* Brush size */}
         <div className="flex items-center gap-3">
-          <span className="text-xs text-[#484860]">Size</span>
+          <span className="text-xs text-[#9B9BB8]">Size</span>
           <input
             type="range"
             min={12}
@@ -158,21 +158,21 @@ export default function AreaSelector({ imageSrc, imageFile, onSubmit, onCancel }
             onChange={(e) => setBrushSize(Number(e.target.value))}
             className="w-28 accent-violet-500"
           />
-          <span className="text-xs text-[#8888A4] w-8">{brushSize}px</span>
+          <span className="text-xs text-[#6B6B8A] w-8">{brushSize}px</span>
         </div>
       </div>
 
       {/* Instruction input */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#8888A4]">
-          What should change in that area? <span className="text-[#484860]">(optional)</span>
+        <label className="text-sm font-medium text-[#6B6B8A]">
+          What should change in that area? <span className="text-[#9B9BB8]">(optional)</span>
         </label>
         <input
           type="text"
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
           placeholder='e.g. "Replace with a cozy reading nook with warm lighting"'
-          className="card rounded-xl px-4 py-3 text-sm text-white placeholder:text-[#484860] outline-none border border-white/[0.08] focus:border-[#7C3AED]/50 transition-colors w-full"
+          className="card rounded-xl px-4 py-3 text-sm text-[#0D0D1A] placeholder:text-[#9B9BB8] outline-none border border-black/[0.08] focus:border-[#7C3AED]/50 transition-colors w-full"
         />
       </div>
 
@@ -180,7 +180,7 @@ export default function AreaSelector({ imageSrc, imageFile, onSubmit, onCancel }
       <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
         <button
           onClick={onCancel}
-          className="flex-1 card card-hover py-3 rounded-xl text-sm font-medium text-[#8888A4] hover:text-white transition-colors"
+          className="flex-1 card card-hover py-3 rounded-xl text-sm font-medium text-[#6B6B8A] hover:text-[#0D0D1A] transition-colors"
         >
           Cancel
         </button>
