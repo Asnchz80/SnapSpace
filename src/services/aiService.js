@@ -46,7 +46,7 @@ function buildSearchUrl(store, productName) {
 }
 
 // ── Prompt schema ──────────────────────────────────────────────
-const ANALYSIS_PROMPT = (style, extra = '') => `
+const ANALYSIS_PROMPT = (style, extra = '', userNotes = '') => `
 You are a professional interior designer and architectural photographer AI.
 Analyze the uploaded photo of a real room and redesign it in ${style} style.
 
@@ -58,6 +58,7 @@ Rules:
 - Use realistic lighting: natural light from windows plus artificial light matching the style. Realistic shadows, reflections, and material textures.
 - Recommend 4-6 specific purchasable products (furniture, lighting, textiles, decor, storage).
 - Products must be from: IKEA, Wayfair, West Elm, Amazon, CB2, Pottery Barn, Target, or Crate & Barrel.
+${userNotes ? `- User's specific requests (honor these above all else while keeping the ${style} style): "${userNotes}"` : ''}
 ${extra}
 
 Return ONLY valid JSON (no markdown fences, no extra text):
@@ -114,7 +115,7 @@ async function generateImage(prompt, originalBase64, mimeType) {
  * Redesign the full space.
  * Returns { redesignedImageUrl, description, products }
  */
-export async function redesignSpace(imageFile, style = 'Modern') {
+export async function redesignSpace(imageFile, style = 'Modern', userNotes = '') {
   if (!ai) throw new Error('VITE_GEMINI_API_KEY is not configured.')
 
   const base64   = await fileToBase64(imageFile)
@@ -125,7 +126,7 @@ export async function redesignSpace(imageFile, style = 'Modern') {
     model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { inlineData: { data: base64, mimeType } },
-      { text: ANALYSIS_PROMPT(style) },
+      { text: ANALYSIS_PROMPT(style, '', userNotes) },
     ]}],
   })
 

@@ -12,6 +12,7 @@ import { redesignSpace, redesignArea, chatRedesign } from './services/aiService.
 // ── Step constants ────────────────────────────────────────────
 const STEP = {
   UPLOAD:      'upload',
+  PREVIEW:     'preview',
   RESULT:      'result',
   AREA_SELECT: 'area_select',
 }
@@ -61,6 +62,8 @@ export default function App() {
   const [step, setStep]                       = useState(STEP.UPLOAD)
   const [imageFile, setImageFile]             = useState(null)
   const [originalPreviewUrl, setOriginalPreviewUrl] = useState(null)
+  const [userDescription, setUserDescription] = useState('')
+  const [pendingDescription, setPendingDescription] = useState('')
 
   // styleResults: array of { id, emoji, status: 'loading'|'done'|'error', result, error }
   const [styleResults, setStyleResults] = useState([])
@@ -96,11 +99,18 @@ export default function App() {
     if (idx !== activeIdx) setActiveIdx(idx)
   }, [activeIdx])
 
-  // ── Handle image upload — kick off all 5 redesigns ────────
+  // ── Handle image upload — go to preview to collect optional description ─
   const handleImageSelected = useCallback((file) => {
     setImageFile(file)
     const url = URL.createObjectURL(file)
     setOriginalPreviewUrl(url)
+    setPendingDescription('')
+    setStep(STEP.PREVIEW)
+  }, [])
+
+  // ── Kick off all 5 redesigns from the preview screen ─────────────
+  const handleStartRedesign = useCallback((description) => {
+    setUserDescription(description)
 
     const initial = REDESIGN_STYLES.map(s => ({
       ...s,
@@ -118,7 +128,7 @@ export default function App() {
 
     // Fire all 5 requests in parallel — results appear as they finish
     REDESIGN_STYLES.forEach((style, i) => {
-      redesignSpace(file, style.id)
+      redesignSpace(imageFile, style.id, description)
         .then(data => {
           setStyleResults(prev => {
             const next = [...prev]
@@ -137,7 +147,7 @@ export default function App() {
           })
         })
     })
-  }, [])
+  }, [imageFile])
 
   // ── Chat modification — update one style slot ─────────────
   const handleChat = useCallback(async (styleIdx, message, currentChatHistory) => {
@@ -259,6 +269,8 @@ export default function App() {
     setOriginalPreviewUrl(null)
     setStyleResults([])
     setActiveIdx(0)
+    setUserDescription('')
+    setPendingDescription('')
   }
 
   // ── Auth guards ───────────────────────────────────────────
@@ -305,6 +317,59 @@ export default function App() {
                 </p>
               </div>
               <UploadZone onImageSelected={handleImageSelected} />
+            </motion.section>
+          )}
+
+          {/* ── PREVIEW — thumbnail + optional description ── */}
+          {step === STEP.PREVIEW && imageFile && (
+            <motion.section
+              key="preview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex flex-col items-center gap-6 pt-10 pb-20 max-w-xl mx-auto w-full px-5"
+            >
+              {/* Photo thumbnail */}
+              <div className="w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-xl">
+                <img
+                  src={originalPreviewUrl}
+                  alt="Your space"
+                  className="w-full object-cover max-h-72"
+                />
+              </div>
+
+              {/* Description input */}
+              <div className="w-full flex flex-col gap-2">
+                <label className="text-xs font-medium text-[#484860] uppercase tracking-widest">
+                  Describe what you want&nbsp;<span className="normal-case text-[#2E2E48]">— optional</span>
+                </label>
+                <textarea
+                  value={pendingDescription}
+                  onChange={(e) => setPendingDescription(e.target.value)}
+                  placeholder={'e.g. "keep the exposed brick wall, add a reading nook by the window, brighter lighting"'}
+                  rows={3}
+                  className="w-full rounded-xl bg-[#0C0C16] border border-white/[0.08] px-4 py-3 text-sm text-white placeholder-[#484860] resize-none focus:outline-none focus:border-[#7C3AED]/60 transition-colors"
+                />
+                <p className="text-xs text-[#484860]">
+                  The AI will honor your notes across all 5 styles.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="w-full flex flex-col gap-2.5">
+                <button
+                  onClick={() => handleStartRedesign(pendingDescription)}
+                  className="w-full h-12 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+                >
+                  Redesign my space →
+                </button>
+                <button
+                  onClick={() => { setStep(STEP.UPLOAD); setImageFile(null); if (originalPreviewUrl) URL.revokeObjectURL(originalPreviewUrl); setOriginalPreviewUrl(null) }}
+                  className="w-full h-10 rounded-xl border border-white/[0.08] text-sm text-[#8888A4] hover:text-white hover:border-white/[0.16] transition-colors"
+                >
+                  ← Change photo
+                </button>
+              </div>
             </motion.section>
           )}
 
