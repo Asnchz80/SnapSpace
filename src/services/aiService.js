@@ -18,12 +18,27 @@ const fileToBase64 = (file) =>
     reader.readAsDataURL(file)
   })
 
-/** Accept either a File or a base64 data URL string; return { base64, mimeType } */
+/** Accept a File, base64 data URL string, or regular https:// URL; return { base64, mimeType } */
 async function resolveImageSource(source) {
   if (typeof source === 'string') {
-    const [header, data] = source.split(',')
-    const mimeType = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg'
-    return { base64: data, mimeType }
+    if (source.startsWith('data:')) {
+      // base64 data URL: "data:image/jpeg;base64,..."
+      const [header, data] = source.split(',')
+      const mimeType = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg'
+      return { base64: data, mimeType }
+    } else {
+      // Regular https:// URL (e.g. Firebase Storage download URL) — fetch and convert
+      const resp = await fetch(source)
+      const blob = await resp.blob()
+      const mimeType = blob.type || 'image/jpeg'
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result.split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+      return { base64, mimeType }
+    }
   }
   const base64 = await fileToBase64(source)
   const mimeType = source.type || 'image/jpeg'
@@ -229,11 +244,10 @@ export async function redesignArea(sourceImage, maskDataUrl, instruction, style 
  * chatHistory = array of strings (user messages so far, oldest first).
  * Returns { redesignedImageUrl, description, products }
  */
-export async function chatRedesign(imageFile, style, chatHistory, newMessage) {
+export async function chatRedesign(imageSource, style, chatHistory, newMessage) {
   if (!ai) throw new Error('VITE_GEMINI_API_KEY is not configured.')
 
-  const base64   = await fileToBase64(imageFile)
-  const mimeType = imageFile.type || 'image/jpeg'
+  const { base64, mimeType } = await resolveImageSource(imageSource)
 
   const historyContext = chatHistory.length > 0
     ? `\nModifications already applied (keep all of these):\n${chatHistory.map((m, i) => `${i + 1}. ${m}`).join('\n')}\n`

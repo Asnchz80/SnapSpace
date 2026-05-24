@@ -8,6 +8,8 @@ import UploadZone from './components/UploadZone.jsx'
 import StyleResultCard from './components/StyleResultCard.jsx'
 import AreaSelector from './components/AreaSelector.jsx'
 import { redesignSpace, redesignArea, chatRedesign } from './services/aiService.js'
+import { loadUserScans, initScanRecord, uploadScanOriginal, saveStyleToScan, deleteScanRecord } from './services/historyService.js'
+import ScanHistoryCard from './components/ScanHistoryCard.jsx'
 
 // ── Step constants ────────────────────────────────────────────
 const STEP = {
@@ -69,6 +71,10 @@ export default function App() {
   const [styleResults, setStyleResults] = useState([])
   const [activeIdx, setActiveIdx]       = useState(0)
 
+  // Scan history
+  const [scanHistory, setScanHistory]       = useState([])
+  const [currentScanId, setCurrentScanId]   = useState(null)
+
   // Carousel scroll ref
   const swipeRef                = useRef(null)
   const isProgrammatic          = useRef(false)
@@ -99,6 +105,12 @@ export default function App() {
     if (idx !== activeIdx) setActiveIdx(idx)
   }, [activeIdx])
 
+  // ── Load scan history whenever we return to the upload screen ──
+  useEffect(() => {
+    if (step !== STEP.UPLOAD || !user) return
+    loadUserScans(user.uid).then(setScanHistory).catch(() => {})
+  }, [step, user])
+
   // ── Handle image upload — go to preview to collect optional description ─
   const handleImageSelected = useCallback((file) => {
     setImageFile(file)
@@ -126,6 +138,19 @@ export default function App() {
     setActiveIdx(0)
     setStep(STEP.RESULT)
 
+    // Create a unique scan ID for this session
+    const scanId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
+    setCurrentScanId(scanId)
+
+    // Init Firestore record immediately; upload original image in background
+    if (user) {
+      initScanRecord(user.uid, scanId, description)
+        .then(() => {
+          if (imageFile) uploadScanOriginal(user.uid, scanId, imageFile).catch(console.warn)
+        })
+        .catch(console.warn)
+    }
+
     // Fire all 5 requests in parallel — results appear as they finish
     REDESIGN_STYLES.forEach((style, i) => {
       redesignSpace(imageFile, style.id, description)
@@ -136,6 +161,10 @@ export default function App() {
             next[i] = { ...next[i], status: 'done', result: data, imageHistory: newHistory, historyIdx: newHistory.length - 1 }
             return next
           })
+          // Save style result to Firestore in background
+          if (user && scanId) {
+            saveStyleToScan(user.uid, scanId, style.id, style.emoji, data).catch(console.warn)
+          }
         })
         .catch(err => {
           console.error(`[SnapSpace] ${style.id} redesign failed:`, err)
@@ -147,7 +176,7 @@ export default function App() {
           })
         })
     })
-  }, [imageFile])
+  }, [imageFile, user])
 
   // ── Chat modification — update one style slot ─────────────
   const handleChat = useCallback(async (styleIdx, message, currentChatHistory) => {
@@ -170,7 +199,7 @@ export default function App() {
       .map(m => m.content)
 
     try {
-      const data = await chatRedesign(imageFile, styleName, userMessages, message)
+      const data = await chatRedesign(imageFile ?? originalPreviewUrl, styleName, userMessages, message)
       setStyleResults(prev => {
         const next = [...prev]
         const slot = next[styleIdx]
@@ -263,7 +292,7 @@ export default function App() {
 
   // ── Reset to start ─────────────────────────────────────────
   const handleReset = () => {
-    if (originalPreviewUrl) URL.revokeObjectURL(originalPreviewUrl)
+    if (originalPreviewUrl && originalPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(originalPreviewUrl)
     setStep(STEP.UPLOAD)
     setImageFile(null)
     setOriginalPreviewUrl(null)
@@ -271,7 +300,72 @@ export default function App() {
     setActiveIdx(0)
     setUserDescription('')
     setPendingDescription('')
+    setCurrentScanId(null)
   }
+
+  // ── Resume a saved scan session ────────────────────────────
+  const handleResumeScan = useCallback((scan) => {
+    setOriginalPreviewUrl(scan.originalUrl)
+    setUserDescription(scan.userDescription || '')
+    setImageFile(null)
+    setCurrentScanId(scan.id)
+
+    const restored = REDESIGN_STYLES.map(s => {
+      const saved = scan.styles?.[s.id]
+      if (!saved || saved.status !== 'done') {
+        return {
+          ...s,
+          status: 'error',
+          result: null,
+          error: 'This style was not saved in this session.',
+          chatHistory: [],
+          chatLoading: false,
+          imageHistory: [],
+          historyIdx: -1,
+        }
+      }
+      const result = {
+        redesignedImageUrl: saved.imageUrl,
+        description: saved.description,
+        products: saved.products || [],
+        roomType: saved.roomType || '',
+        estimatedSqFt: saved.estimatedSqFt ?? null,
+        roomDimensions: saved.roomDimensions || '',
+        ceilingHeight: saved.ceilingHeight || '',
+        floorPlanNotes: saved.floorPlanNotes || '',
+        imagePrompt: '',
+      }
+      return {
+        ...s,
+        status: 'done',
+        result,
+        error: null,
+        chatHistory: [],
+        chatLoading: false,
+        imageHistory: [saved.imageUrl],
+        historyIdx: 0,
+      }
+    })
+
+    setStyleResults(restored)
+    setActiveIdx(restored.findIndex(r => r.status === 'done') || 0)
+    setStep(STEP.RESULT)
+
+    // Fetch original image in background so area redo / chat work after resume
+    if (scan.originalUrl) {
+      fetch(scan.originalUrl)
+        .then(r => r.blob())
+        .then(blob => setImageFile(new File([blob], 'original.jpg', { type: blob.type })))
+        .catch(() => {})
+    }
+  }, [])
+
+  // ── Delete a scan from history ─────────────────────────────
+  const handleDeleteScan = useCallback((scanId) => {
+    if (!user) return
+    setScanHistory(prev => prev.filter(s => s.id !== scanId))
+    deleteScanRecord(user.uid, scanId).catch(console.warn)
+  }, [user])
 
   // ── Auth guards ───────────────────────────────────────────
   if (authLoading) {
@@ -317,6 +411,28 @@ export default function App() {
                 </p>
               </div>
               <UploadZone onImageSelected={handleImageSelected} />
+
+              {/* Recent scans */}
+              {scanHistory.length > 0 && (
+                <div className="w-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-semibold text-[#0D0D1A]">Recent Scans</h2>
+                    <span className="text-xs text-[#9B9BB8]">
+                      {scanHistory.length} scan{scanHistory.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {scanHistory.map(scan => (
+                      <ScanHistoryCard
+                        key={scan.id}
+                        scan={scan}
+                        onResume={handleResumeScan}
+                        onDelete={handleDeleteScan}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.section>
           )}
 
@@ -451,7 +567,7 @@ export default function App() {
           )}
 
           {/* ── AREA SELECT ────────────────────────────────── */}
-          {step === STEP.AREA_SELECT && imageFile && (
+          {step === STEP.AREA_SELECT && (imageFile || styleResults[activeIdx]?.imageHistory?.[styleResults[activeIdx]?.historyIdx]) && (
             <motion.section
               key="area_select"
               initial={{ opacity: 0, y: 20 }}
