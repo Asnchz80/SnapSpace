@@ -24,8 +24,8 @@ export default function ProductCard({ product, index }) {
     ?? `${product.category} ${product.name} interior design`
   const imgSrc = `https://loremflickr.com/320/200/${encodeURIComponent(searchQuery)}?random=${index + 1}`
 
-  const googleShopUrl   = `https://www.google.com/search?q=${encodeURIComponent(product.name)}&tbm=shop`
-  const googleImagesUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}&tbm=isch`
+  const googleShopUrl = `https://www.google.com/search?q=${encodeURIComponent(product.name)}&tbm=shop`
+  const googleLensUrl  = `https://lens.google.com/search?url=${encodeURIComponent(imgSrc)}`
 
   const openMenu = useCallback(() => {
     const rect = cardRef.current?.getBoundingClientRect()
@@ -184,9 +184,9 @@ export default function ProductCard({ product, index }) {
               </div>
             </a>
 
-            {/* Option: Google Images (visual search) */}
+            {/* Option: Google Lens (visual reverse-image search) */}
             <a
-              href={googleImagesUrl}
+              href={googleLensUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMenu(null)}
@@ -196,8 +196,8 @@ export default function ProductCard({ product, index }) {
                 <Search size={15} className="text-blue-600" />
               </div>
               <div>
-                <div className="text-xs font-semibold text-[#0D0D1A]">Find by image</div>
-                <div className="text-[10px] text-[#9B9BB8]">Google Images visual search</div>
+                <div className="text-xs font-semibold text-[#0D0D1A]">Google Lens</div>
+                <div className="text-[10px] text-[#9B9BB8]">Visual search with this image</div>
               </div>
             </a>
           </motion.div>
