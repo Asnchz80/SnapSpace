@@ -14,6 +14,41 @@
           }
         }
       }
+    },
+
+    // AI improvement data — separate branch for training/feedback collection.
+    // Each user can only access their own subtree.
+    "aiImprovement": {
+      "$uid": {
+        ".read":  "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+
+        // Each scan session
+        "$scanId": {
+          // meta: must have createdAt
+          "meta": {
+            ".validate": "newData.hasChild('createdAt')"
+          },
+          // styles: each style entry must have imageUrl + generatedAt
+          "styles": {
+            "$styleId": {
+              ".validate": "newData.hasChildren(['imageUrl', 'generatedAt'])"
+            }
+          },
+          // areaRedos: each redo must have style + instruction + timestamp
+          "areaRedos": {
+            "$entry": {
+              ".validate": "newData.hasChildren(['style', 'instruction', 'timestamp'])"
+            }
+          },
+          // chatThread: each message must have role + content + timestamp
+          "chatThread": {
+            "$entry": {
+              ".validate": "newData.hasChildren(['role', 'content', 'timestamp'])"
+            }
+          }
+        }
+      }
     }
   }
 }

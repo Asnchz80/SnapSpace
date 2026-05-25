@@ -9,6 +9,7 @@ import StyleResultCard from './components/StyleResultCard.jsx'
 import AreaSelector from './components/AreaSelector.jsx'
 import { redesignSpace, redesignArea, chatRedesign } from './services/aiService.js'
 import { loadUserScans, initScanRecord, uploadScanOriginal, saveStyleToScan, deleteScanRecord } from './services/historyService.js'
+import { aiLog_ScanStart, aiLog_OriginalImage, aiLog_StyleResult, aiLog_AreaRedo, aiLog_ChatMessage } from './services/aiImprovementService.js'
 import ScanHistoryCard from './components/ScanHistoryCard.jsx'
 
 // ── Step constants ────────────────────────────────────────────
@@ -146,9 +147,14 @@ export default function App() {
 
     // Init Firestore record immediately; upload original image in background
     if (user) {
+      aiLog_ScanStart(user.uid, scanId, description).catch(console.warn)
       initScanRecord(user.uid, scanId, description)
         .then(() => {
-          if (imageFile) uploadScanOriginal(user.uid, scanId, imageFile).catch(console.warn)
+          if (imageFile) {
+            uploadScanOriginal(user.uid, scanId, imageFile)
+              .then(url => aiLog_OriginalImage(user.uid, scanId, url).catch(console.warn))
+              .catch(console.warn)
+          }
         })
         .catch(console.warn)
     }
@@ -165,7 +171,11 @@ export default function App() {
           })
           // Save style result to Firestore in background
           if (user && scanId) {
-            saveStyleToScan(user.uid, scanId, style.id, style.emoji, data).catch(console.warn)
+            saveStyleToScan(user.uid, scanId, style.id, style.emoji, data)
+              .then(storageUrl => {
+                aiLog_StyleResult(user.uid, scanId, style.id, storageUrl, data.description).catch(console.warn)
+              })
+              .catch(console.warn)
           }
         })
         .catch(err => {
@@ -200,8 +210,17 @@ export default function App() {
       .filter(m => m.role === 'user')
       .map(m => m.content)
 
+    // Log the user's message to AI improvement DB
+    if (user && currentScanId) {
+      aiLog_ChatMessage(user.uid, currentScanId, styleName, 'user', message).catch(console.warn)
+    }
+
     try {
       const data = await chatRedesign(imageFile ?? originalPreviewUrl, styleName, userMessages, message)
+      // Log the assistant's reply (with image) to AI improvement DB
+      if (user && currentScanId) {
+        aiLog_ChatMessage(user.uid, currentScanId, styleName, 'assistant', data.description, data.redesignedImageUrl).catch(console.warn)
+      }
       setStyleResults(prev => {
         const next = [...prev]
         const slot = next[styleIdx]
@@ -240,7 +259,7 @@ export default function App() {
         return next
       })
     }
-  }, [imageFile, styleResults])
+  }, [imageFile, styleResults, user, currentScanId])
 
   // ── Area redo — builds on the currently displayed generated image ──
   const handleAreaSubmit = async (maskDataUrl, instruction) => {
@@ -269,6 +288,10 @@ export default function App() {
         next[activeIdx] = { ...s, status: 'done', result: data, imageHistory: newHistory, historyIdx: newHistory.length - 1 }
         return next
       })
+      // Log area redo to AI improvement DB
+      if (user && currentScanId) {
+        aiLog_AreaRedo(user.uid, currentScanId, currentStyle, instruction, data.redesignedImageUrl).catch(console.warn)
+      }
     } catch (err) {
       console.error('Area redesign error:', err)
       setStyleResults(prev => {

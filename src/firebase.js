@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
 import { getStorage } from 'firebase/storage'
 import { getFirestore } from 'firebase/firestore'
+import { getDatabase } from 'firebase/database'
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
@@ -24,6 +25,7 @@ const app = initializeApp(firebaseConfig)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null
 export const storage   = getStorage(app)
 export const db        = getFirestore(app)
+export const rtdb      = getDatabase(app)
 export const functions = getFunctions(app)
 export const auth      = getAuth(app)
 
