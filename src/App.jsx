@@ -404,14 +404,58 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center gap-10 pt-10 pb-20 max-w-2xl mx-auto w-full px-5"
             >
-              <div className="text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-[3rem] font-bold text-[#0D0D1A] leading-[1.1] tracking-[-0.03em]">
-                  Transform any room<br />with AI
+              {/* ── Hero ────────────────────────────────────── */}
+              <div className="text-center relative">
+                {/* Decorative glow behind headline */}
+                <div
+                  className="absolute -top-10 left-1/2 -translate-x-1/2 w-[480px] h-[200px] rounded-full pointer-events-none"
+                  style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.12) 0%, transparent 70%)' }}
+                />
+
+                {/* Feature badges */}
+                <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+                  {[
+                    { label: '5 AI styles',       dot: '#7C3AED' },
+                    { label: 'Shoppable links',   dot: '#10B981' },
+                    { label: 'Instant results',   dot: '#F59E0B' },
+                  ].map(({ label, dot }) => (
+                    <span
+                      key={label}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-black/[0.10] text-[#484860] shadow-sm"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dot }} />
+                      {label}
+                    </span>
+                  ))}
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl md:text-[3.5rem] font-black text-[#0D0D1A] leading-[1.05] tracking-[-0.04em]">
+                  Transform any room<br />
+                  <span className="text-gradient">with AI</span>
                 </h1>
-                <p className="mt-4 text-[15px] text-[#6B6B8A] leading-relaxed max-w-sm mx-auto">
+                <p className="mt-5 text-[15px] text-[#6B6B8A] leading-relaxed max-w-[340px] mx-auto">
                   Upload a photo and instantly see your space redesigned in 5 different styles — with shoppable product links.
                 </p>
+
+                {/* Style chips */}
+                <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
+                  {[
+                    { id: 'Modern',      e: '🏙️' },
+                    { id: 'Scandinavian',e: '🌿' },
+                    { id: 'Mid-Century', e: '🛋️' },
+                    { id: 'Industrial',  e: '⚙️' },
+                    { id: 'Japandi',     e: '🍵' },
+                  ].map(s => (
+                    <span
+                      key={s.id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-black/[0.09] text-[#0D0D1A] shadow-sm hover:border-[#7C3AED]/40 hover:text-[#7C3AED] transition-colors"
+                    >
+                      <span>{s.e}</span> {s.id}
+                    </span>
+                  ))}
+                </div>
               </div>
+
               <UploadZone onImageSelected={handleImageSelected} />
 
               {/* Recent scans */}

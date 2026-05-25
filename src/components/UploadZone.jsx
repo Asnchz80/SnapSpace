@@ -14,13 +14,7 @@ export default function UploadZone({ onImageSelected }) {
   const handleDrop = (e) => {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    processFile(file)
-  }
-
-  const handleDragOver = (e) => {
-    e.preventDefault()
-    setIsDragging(true)
+    processFile(e.dataTransfer.files[0])
   }
 
   const handleCapture = () => {
@@ -33,46 +27,67 @@ export default function UploadZone({ onImageSelected }) {
   }
 
   return (
-    <div className="w-full">
+    <div
+      className="w-full bg-white rounded-2xl border border-black/[0.10] overflow-hidden"
+      style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.08), 0 24px 56px rgba(0,0,0,0.05)' }}
+    >
+      {/* ── Drop zone ───────────────────────────────── */}
       <motion.div
         onDrop={handleDrop}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
         onClick={() => inputRef.current?.click()}
         animate={{
-          borderColor: isDragging ? 'rgba(124,58,237,0.55)' : 'rgba(255,255,255,0.1)',
-          backgroundColor: isDragging ? 'rgba(124,58,237,0.05)' : 'transparent',
+          backgroundColor: isDragging ? 'rgba(124,58,237,0.06)' : 'rgba(248,246,255,1)',
         }}
-        className="group relative border-2 border-dashed rounded-2xl p-8 sm:p-14 cursor-pointer flex flex-col items-center gap-5"
-        style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+        transition={{ duration: 0.15 }}
+        className="relative cursor-pointer flex flex-col items-center gap-5 p-10 sm:p-14 m-3 rounded-xl overflow-hidden"
+        style={{
+          border: `2px dashed ${isDragging ? 'rgba(124,58,237,0.55)' : 'rgba(124,58,237,0.22)'}`,
+          transition: 'border-color 0.15s',
+        }}
       >
+        {/* Decorative corner dots */}
+        <span className="absolute top-3 left-3 w-1.5 h-1.5 rounded-full bg-[#7C3AED]/20" />
+        <span className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#7C3AED]/20" />
+        <span className="absolute bottom-3 left-3 w-1.5 h-1.5 rounded-full bg-[#7C3AED]/20" />
+        <span className="absolute bottom-3 right-3 w-1.5 h-1.5 rounded-full bg-[#7C3AED]/20" />
+
+        {/* Icon */}
         <AnimatePresence mode="wait">
           <motion.div
             key={isDragging ? 'drop' : 'idle'}
-            initial={{ scale: 0.85, opacity: 0 }}
+            initial={{ scale: 0.82, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.85, opacity: 0 }}
+            exit={{ scale: 0.82, opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="w-14 h-14 rounded-xl card flex items-center justify-center group-hover:border-[#7C3AED]/40 transition-colors"
+            className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg"
+            style={{
+              background: isDragging
+                ? 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)'
+                : 'linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)',
+              boxShadow: '0 8px 24px rgba(124,58,237,0.35)',
+            }}
           >
             {isDragging
-              ? <ImageIcon size={22} className="text-[#A78BFA]" />
-              : <UploadCloud size={22} className="text-[#8888A4] group-hover:text-[#A78BFA] transition-colors" />
+              ? <ImageIcon size={28} className="text-white" />
+              : <UploadCloud size={28} className="text-white" />
             }
           </motion.div>
         </AnimatePresence>
 
+        {/* Copy */}
         <div className="text-center">
-          <p className="text-base font-medium text-[#0D0D1A]">
-            {isDragging ? 'Drop to upload' : 'Upload a photo of your space'}
+          <p className="text-lg font-bold text-[#0D0D1A]">
+            {isDragging ? 'Drop your photo here' : 'Upload a photo of your space'}
           </p>
-          <p className="text-sm text-[#6B6B8A] mt-1">
+          <p className="text-sm text-[#6B6B8A] mt-1.5">
             Drag &amp; drop, or{' '}
-            <span className="text-[#7C3AED] group-hover:text-violet-600 transition-colors">
-              click to browse
-            </span>
+            <span className="text-[#7C3AED] font-semibold">click to browse</span>
           </p>
-          <p className="text-xs text-[#9B9BB8] mt-3">JPG · PNG · HEIC — up to 20 MB</p>
+          <span className="inline-block mt-3 text-xs text-[#9B9BB8] bg-[#F0F0F8] border border-black/[0.07] px-3 py-1 rounded-full">
+            JPG · PNG · HEIC — up to 20 MB
+          </span>
         </div>
 
         <input
@@ -84,13 +99,24 @@ export default function UploadZone({ onImageSelected }) {
         />
       </motion.div>
 
+      {/* ── Divider ─────────────────────────────────── */}
+      <div className="flex items-center gap-3 px-5 pb-1">
+        <div className="flex-1 h-px bg-black/[0.07]" />
+        <span className="text-xs font-semibold text-[#9B9BB8] uppercase tracking-wider">or</span>
+        <div className="flex-1 h-px bg-black/[0.07]" />
+      </div>
+
+      {/* ── Camera button ────────────────────────────── */}
       <button
         onClick={handleCapture}
-        className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-black/[0.08] text-sm text-[#6B6B8A] hover:text-[#0D0D1A] hover:border-black/[0.14] transition-colors"
+        className="w-full flex items-center justify-center gap-2.5 h-14 px-5 mb-3 mx-0 text-sm font-semibold text-[#0D0D1A] hover:text-[#7C3AED] hover:bg-violet-50 transition-colors rounded-b-xl"
       >
-        <Camera size={14} />
-        Use camera
+        <div className="w-7 h-7 rounded-lg bg-[#F0F0F8] flex items-center justify-center">
+          <Camera size={14} className="text-[#7C3AED]" />
+        </div>
+        Take a photo with camera
       </button>
     </div>
   )
 }
+
